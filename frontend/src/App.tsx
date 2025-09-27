@@ -40,6 +40,7 @@ function App() {
       tags: [],
       isPinned: false,
       isEncrypted: false,
+      isShared: false,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };

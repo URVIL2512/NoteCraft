@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Note } from '../types/Note'
-import { Eye, Tag, CheckCircle, BookOpen } from 'lucide-react'
+import { Eye, Tag, CheckCircle, BookOpen, Share2, Copy, ExternalLink } from 'lucide-react'
 
 interface SidebarAIProps {
   note: Note
@@ -23,16 +23,18 @@ export default function SidebarAI({ note, editorRef, onUpdateNote }: SidebarAIPr
   const [loadingTags, setLoadingTags] = useState(false)
   const [tags, setTags] = useState<string[]>([])
   const [loadingGrammar, setLoadingGrammar] = useState(false)
-  const [grammarResult, setGrammarResult] = useState<{ corrected?:string; issues?:any[] }>({})
+  const [grammarResult, setGrammarResult] = useState<{ corrected?:string; issues?:any[]; hasChanges?:boolean }>({})
   const [loadingGlossary, setLoadingGlossary] = useState(false)
   const [glossary, setGlossary] = useState<{term:string;definition:string}[]>([])
   const [highlightOn, setHighlightOn] = useState(false)
   const [error, setError] = useState('')
+  const [loadingShare, setLoadingShare] = useState(false)
+  const [shareUrl, setShareUrl] = useState('')
+  const [shareCopied, setShareCopied] = useState(false)
 
   async function callApi(path:string, body:any) {
-    // Use relative URL for production (same domain), absolute for development
     const baseUrl = process.env.NODE_ENV === 'production' 
-      ? '' // Same domain as frontend
+      ? '' 
       : 'http://localhost:5173'
     
     const res = await fetch(`${baseUrl}${path}`, {
@@ -170,6 +172,51 @@ export default function SidebarAI({ note, editorRef, onUpdateNote }: SidebarAIPr
     setHighlightOn(false)
   }
 
+  async function handleShareNote() {
+    setError('')
+    setLoadingShare(true)
+    setShareCopied(false)
+    try {
+      const data = await callApi('/api/notes/share', { 
+        noteId: note.id,
+        title: note.title,
+        content: note.content,
+        tags: note.tags
+      })
+      
+      const generatedUrl = data.shareUrl || `${window.location.origin}/shared/${data.shareId}`
+      setShareUrl(generatedUrl)
+      
+      // Update the note with sharing info
+      const updatedNote = { 
+        ...note, 
+        isShared: true, 
+        shareId: data.shareId, 
+        shareUrl: generatedUrl 
+      }
+      onUpdateNote(updatedNote)
+      
+    } catch {
+      setError('Failed to create shareable link')
+    } finally {
+      setLoadingShare(false)
+    }
+  }
+
+  async function copyShareUrl() {
+    if (shareUrl) {
+      await navigator.clipboard.writeText(shareUrl)
+      setShareCopied(true)
+      setTimeout(() => setShareCopied(false), 2000)
+    }
+  }
+
+  function openSharedNote() {
+    if (shareUrl) {
+      window.open(shareUrl, '_blank')
+    }
+  }
+
   return (
     <div className="space-y-4 p-4 w-72">
       <div className="bg-white rounded-lg p-4 shadow">
@@ -252,6 +299,52 @@ export default function SidebarAI({ note, editorRef, onUpdateNote }: SidebarAIPr
               ))}
             </div>
           ) : <div className="italic text-gray-400">Hover over key terms for definitions</div>}
+        </div>
+      </div>
+
+      <div className="bg-white rounded-lg p-4 shadow">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Share2 className="h-5 w-5 text-blue-600" />
+            <h3 className="text-sm font-semibold">Share Note</h3>
+          </div>
+          <button onClick={handleShareNote} className="text-sm text-indigo-600">
+            {loadingShare ? '...' : 'Share'}
+          </button>
+        </div>
+        <div className="mt-3 text-sm text-gray-600">
+          {shareUrl || note.shareUrl ? (
+            <div className="space-y-2">
+              <div className="text-xs text-gray-500">Shareable link:</div>
+              <div className="flex items-center gap-2">
+                <input 
+                  type="text" 
+                  value={shareUrl || note.shareUrl || ''} 
+                  readOnly 
+                  className="flex-1 text-xs p-2 border rounded bg-gray-50"
+                />
+                <button 
+                  onClick={copyShareUrl} 
+                  className="p-2 text-gray-600 hover:text-blue-600"
+                  title="Copy link"
+                >
+                  <Copy className="h-4 w-4" />
+                </button>
+                <button 
+                  onClick={openSharedNote} 
+                  className="p-2 text-gray-600 hover:text-blue-600"
+                  title="Open in new tab"
+                >
+                  <ExternalLink className="h-4 w-4" />
+                </button>
+              </div>
+              {shareCopied && (
+                <div className="text-xs text-green-600">✅ Link copied to clipboard!</div>
+              )}
+            </div>
+          ) : (
+            <div className="italic text-gray-400">Click share to create a shareable link</div>
+          )}
         </div>
       </div>
 

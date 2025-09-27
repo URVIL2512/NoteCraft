@@ -7,6 +7,9 @@ export interface Note {
     isEncrypted: boolean;
     password?: string;
     encryptedContent?: string;
+    isShared?: boolean;
+    shareId?: string;
+    shareUrl?: string;
     createdAt: string;
     updatedAt: string;
   }
