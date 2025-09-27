@@ -6,8 +6,5 @@
   },
   "buildCommand": "cd frontend && npm install && npm run build",
   "outputDirectory": "frontend/dist",
-  "framework": "vite",
-  "env": {
-    "GOOGLE_API_KEY": "@google_api_key"
-  }
+  "framework": "vite"
 }
