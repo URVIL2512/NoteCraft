@@ -93,7 +93,25 @@ PlayPower/
 
 ## 🌐 Deployment
 
-Deploy your application using your preferred hosting platform. Make sure to set the `GOOGLE_API_KEY` environment variable in your deployment environment.
+### Vercel Deployment (Recommended)
+
+This project is configured for easy deployment on Vercel:
+
+1. **Push to GitHub**: Ensure your code is pushed to a GitHub repository
+2. **Deploy on Vercel**: 
+   - Go to [vercel.com](https://vercel.com)
+   - Import your GitHub repository
+   - Set the `GOOGLE_API_KEY` environment variable
+   - Deploy!
+
+📖 **Detailed Guide**: See [VERCEL-DEPLOYMENT.md](./VERCEL-DEPLOYMENT.md) for complete deployment instructions.
+
+### Other Platforms
+
+You can also deploy to other platforms like Netlify, Railway, or your own server. Make sure to:
+- Set the `GOOGLE_API_KEY` environment variable
+- Configure the build process for the frontend
+- Set up the API endpoints as serverless functions
 
 ## 🔧 Configuration
 

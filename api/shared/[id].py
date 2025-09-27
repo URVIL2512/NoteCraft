@@ -1,36 +1,32 @@
-from flask import Flask, request, jsonify
+from http.server import BaseHTTPRequestHandler
 import json
-
-app = Flask(__name__)
+import os
 
 # Import shared_notes from the share endpoint
 # In production, this should be a proper database
 shared_notes = {}
 
-def handler(request):
-    if request.method == 'OPTIONS':
-        return ('', 200, {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'GET, OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type'
-        })
+class handler(BaseHTTPRequestHandler):
+    def do_OPTIONS(self):
+        self.send_response(200)
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'GET, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+        self.end_headers()
     
-    if request.method != 'GET':
-        return jsonify({'error': 'Method not allowed'}), 405
-    
-    try:
-        # Extract share_id from the path
-        path_parts = request.path.split('/')
-        share_id = path_parts[-1] if path_parts else ''
-        
-        if not share_id or share_id not in shared_notes:
-            return jsonify({'error': 'Shared note not found'}), 404, {
-                'Access-Control-Allow-Origin': '*'
-            }
-        
-        note = shared_notes[share_id]
-        
-        html_content = f"""
+    def do_GET(self):
+        try:
+            # Extract share_id from the path
+            path_parts = self.path.split('/')
+            share_id = path_parts[-1] if path_parts else ''
+            
+            if not share_id or share_id not in shared_notes:
+                self.send_error_response('Shared note not found', 404)
+                return
+            
+            note = shared_notes[share_id]
+            
+            html_content = f"""
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -54,13 +50,20 @@ def handler(request):
 </body>
 </html>
 """
-        
-        return html_content, 200, {
-            'Content-Type': 'text/html',
-            'Access-Control-Allow-Origin': '*'
-        }
-    except Exception as e:
-        print(f"Error in shared note endpoint: {e}")
-        return jsonify({'error': 'Failed to load shared note'}), 500, {
-            'Access-Control-Allow-Origin': '*'
-        }
+            
+            self.send_response(200)
+            self.send_header('Content-Type', 'text/html')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(html_content.encode('utf-8'))
+            
+        except Exception as e:
+            print(f"Error in shared note endpoint: {e}")
+            self.send_error_response('Failed to load shared note', 500)
+    
+    def send_error_response(self, message, status_code):
+        self.send_response(status_code)
+        self.send_header('Content-Type', 'application/json')
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.end_headers()
+        self.wfile.write(json.dumps({'error': message}).encode('utf-8'))

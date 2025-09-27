@@ -299,7 +299,9 @@ export default function SidebarAI({ note, editorRef, onUpdateNote }: SidebarAIPr
         tags: note.tags
       })
       
-      const data = await callApi('http://localhost:5000/api/notes/share', { 
+      // Use environment-aware API URL
+      const baseURL = process.env.NODE_ENV === 'production' ? '' : 'http://localhost:5000';
+      const data = await callApi(`${baseURL}/api/notes/share`, { 
         noteId: note.id,
         title: note.title,
         content: note.content,

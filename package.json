@@ -3,9 +3,10 @@
   "version": "1.0.0",
   "description": "AI-powered note-taking application",
   "scripts": {
-    "build": "cd frontend && npm run build",
+    "build": "cd frontend && npm install && npm run build",
     "start": "cd backend && python app.py",
-    "dev": "concurrently \"cd backend && python app.py\" \"cd frontend && npm run dev\""
+    "dev": "concurrently \"cd backend && python app.py\" \"cd frontend && npm run dev\"",
+    "vercel-build": "cd frontend && npm install && npm run build"
   },
   "dependencies": {
     "concurrently": "^8.2.2"

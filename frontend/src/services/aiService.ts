@@ -6,9 +6,17 @@ export interface AIService {
   }
   
   class RealAIService implements AIService {
+    private getBaseURL(): string {
+      // Use environment variable for production, fallback to localhost for development
+      return process.env.NODE_ENV === 'production' 
+        ? '' // Use relative URLs in production (Vercel)
+        : 'http://localhost:5000';
+    }
+
     private async callAPI(endpoint: string, data: any): Promise<any> {
       try {
-        const response = await fetch(`http://localhost:5000/api/ai/${endpoint}`, {
+        const baseURL = this.getBaseURL();
+        const response = await fetch(`${baseURL}/api/ai/${endpoint}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
