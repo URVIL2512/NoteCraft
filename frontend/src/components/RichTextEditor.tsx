@@ -184,17 +184,30 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ note, onUpdateNote, edi
   };
 
   const removePassword = () => {
-    if (window.confirm('Are you sure you want to remove password protection from this note?')) {
-      const updatedNote = { 
-        ...note, 
-        isEncrypted: false, 
-        encryptedContent: undefined 
-      };
-      onUpdateNote(updatedNote);
-      setIsDecrypted(true);
-      setShowDecryption(false);
-      setPassword('');
-      setDecryptionError('');
+    if (!password.trim()) {
+      setDecryptionError('Please enter the current password to remove protection');
+      return;
+    }
+    
+    try {
+      // First verify the password by attempting to decrypt
+      const decryptedContent = decryptText(note.encryptedContent || '', password);
+      
+      if (window.confirm('Are you sure you want to remove password protection from this note?')) {
+        const updatedNote = { 
+          ...note, 
+          isEncrypted: false, 
+          encryptedContent: undefined,
+          content: decryptedContent // Restore the decrypted content
+        };
+        onUpdateNote(updatedNote);
+        setIsDecrypted(true);
+        setShowDecryption(false);
+        setPassword('');
+        setDecryptionError('');
+      }
+    } catch {
+      setDecryptionError('Incorrect password. Please enter the correct password to remove protection.');
     }
   };
 
@@ -206,7 +219,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ note, onUpdateNote, edi
             <Lock className="h-6 w-6 text-red-600" />
             <h2 className="text-xl font-semibold text-gray-900">Encrypted Note</h2>
           </div>
-          <p className="text-gray-600 mb-4">This note is password protected. Enter the password to view and edit.</p>
+          <p className="text-gray-600 mb-4">This note is password protected. Enter the password to view, edit, or remove protection.</p>
           <div className="space-y-4">
             <div className="relative">
               <input
@@ -239,6 +252,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ note, onUpdateNote, edi
               <button
                 onClick={removePassword}
                 className="flex-1 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
+                title="Enter correct password to remove protection"
               >
                 Remove Password
               </button>
