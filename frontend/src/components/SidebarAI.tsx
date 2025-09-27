@@ -5,11 +5,12 @@ import { aiService } from '../services/aiService'
 
 interface SidebarAIProps {
   note: Note
-  editorRef: React.RefObject<HTMLTextAreaElement>
+  editorRef: React.RefObject<HTMLDivElement>
   onUpdateNote: (note: Note) => void
 }
 
 function stripHtml(html = '') {
+  if (!html) return '';
   const doc = new DOMParser().parseFromString(html, 'text/html')
   return doc.body.textContent || ''
 }
@@ -107,7 +108,9 @@ export default function SidebarAI({ note, editorRef, onUpdateNote }: SidebarAIPr
     if (!corrected) return
     const updatedNote = { ...note, content: corrected }
     onUpdateNote(updatedNote)
-    if (editorRef.current) editorRef.current.value = corrected
+    if (editorRef.current) {
+      editorRef.current.innerHTML = corrected
+    }
   }
 
   async function handleGenerateGlossary() {

@@ -16,7 +16,7 @@ function App() {
   const [searchTerm, setSearchTerm] = useState('');
   const [showAIPanel, setShowAIPanel] = useState(true);
   const [showLeftPanel, setShowLeftPanel] = useState(true);
-  const editorRef = useRef<HTMLTextAreaElement>(null);
+  const editorRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const savedNotes = loadNotes();

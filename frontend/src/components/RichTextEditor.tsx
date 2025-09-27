@@ -18,11 +18,11 @@ import { encryptText, decryptText } from '../utils/encryption';
 interface RichTextEditorProps {
   note: Note;
   onUpdateNote: (note: Note) => void;
-  editorRef?: React.RefObject<HTMLTextAreaElement>;
+  editorRef?: React.RefObject<HTMLDivElement>;
 }
 
 const RichTextEditor: React.FC<RichTextEditorProps> = ({ note, onUpdateNote, editorRef: externalEditorRef }) => {
-  const internalEditorRef = useRef<HTMLTextAreaElement>(null);
+  const internalEditorRef = useRef<HTMLDivElement>(null);
   const editorRef = externalEditorRef || internalEditorRef;
   const titleRef = useRef<HTMLInputElement>(null);
   const [fontSize, setFontSize] = useState(16);
@@ -53,72 +53,15 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ note, onUpdateNote, edi
   const executeCommand = (command: string, value?: string) => {
     if (!editorRef.current) return;
     
-    const textarea = editorRef.current;
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const selectedText = textarea.value.substring(start, end);
-    const beforeText = textarea.value.substring(0, start);
-    const afterText = textarea.value.substring(end);
+    // Focus the editor first
+    editorRef.current.focus();
     
-    let newText = '';
+    // Execute the formatting command
+    document.execCommand(command, false, value);
     
-    switch (command) {
-      case 'bold':
-        if (selectedText) {
-          newText = `**${selectedText}**`;
-        } else {
-          newText = '**bold text**';
-        }
-        break;
-      case 'italic':
-        if (selectedText) {
-          newText = `*${selectedText}*`;
-        } else {
-          newText = '*italic text*';
-        }
-        break;
-      case 'underline':
-        if (selectedText) {
-          newText = `<u>${selectedText}</u>`;
-        } else {
-          newText = '<u>underlined text</u>';
-        }
-        break;
-      case 'justifyLeft':
-        if (selectedText) {
-          newText = selectedText;
-        } else {
-          newText = 'Left aligned text';
-        }
-        break;
-      case 'justifyCenter':
-        if (selectedText) {
-          newText = `\n\n${selectedText}\n\n`;
-        } else {
-          newText = '\n\nCentered text\n\n';
-        }
-        break;
-      case 'justifyRight':
-        if (selectedText) {
-          newText = `\t\t\t${selectedText}`;
-        } else {
-          newText = '\t\t\tRight aligned text';
-        }
-        break;
-      default:
-        return;
-    }
-    
-    const newContent = beforeText + newText + afterText;
-    const updatedNote = { ...note, content: newContent };
+    // Update the note content with the formatted HTML
+    const updatedNote = { ...note, content: editorRef.current.innerHTML };
     onUpdateNote(updatedNote);
-    
-    // Focus and set cursor position
-    textarea.focus();
-    setTimeout(() => {
-      const newCursorPos = start + newText.length;
-      textarea.setSelectionRange(newCursorPos, newCursorPos);
-    }, 0);
   };
 
 
@@ -374,14 +317,15 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ note, onUpdateNote, edi
       )}
 
       <div className="flex-1 flex flex-col">
-        <textarea
+        <div
           ref={editorRef}
-          value={note.content}
-          onChange={(e) => {
-            const updatedNote = { ...note, content: e.target.value };
+          contentEditable
+          dangerouslySetInnerHTML={{ __html: note.content }}
+          onInput={(e) => {
+            const updatedNote = { ...note, content: e.currentTarget.innerHTML };
             onUpdateNote(updatedNote);
           }}
-          className="flex-1 w-full h-full p-6 outline-none resize-none border-none"
+          className="flex-1 w-full h-full p-6 outline-none resize-none border-none overflow-y-auto"
           style={{
             fontSize: `${fontSize}px`,
             lineHeight: '1.6',
@@ -398,7 +342,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ note, onUpdateNote, edi
             overflowWrap: 'break-word'
           }}
           dir="ltr"
-          placeholder="Start typing your note..."
+          data-placeholder="Start typing your note..."
         />
       </div>
     </div>
