@@ -8,6 +8,7 @@ interface NotesListProps {
   onSelectNote: (note: Note) => void;
   onDeleteNote: (noteId: string) => void;
   onTogglePin: (noteId: string) => void;
+  showPinnedOnly?: boolean;
 }
 
 const NotesList: React.FC<NotesListProps> = ({
@@ -16,6 +17,7 @@ const NotesList: React.FC<NotesListProps> = ({
   onSelectNote,
   onDeleteNote,
   onTogglePin,
+  showPinnedOnly = false,
 }) => {
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -41,8 +43,11 @@ const NotesList: React.FC<NotesListProps> = ({
     <div className="h-full flex flex-col">
       <div className="p-4 bg-gray-50 border-b border-gray-200">
         <h2 className="text-lg font-semibold text-gray-900">
-          Notes ({notes.length})
+          {showPinnedOnly ? 'Pinned Notes' : 'Notes'} ({notes.length})
         </h2>
+        {showPinnedOnly && notes.length === 0 && (
+          <p className="text-sm text-gray-500 mt-1">No pinned notes yet</p>
+        )}
       </div>
 
       <div className="flex-1 overflow-auto">

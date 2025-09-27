@@ -1,19 +1,29 @@
 import { Note } from '../types/Note';
 
-export const filterNotes = (notes: Note[], searchTerm: string): Note[] => {
-  if (!searchTerm.trim()) return notes;
+export const filterNotes = (notes: Note[], searchTerm: string, showPinnedOnly: boolean = false): Note[] => {
+  let filteredNotes = notes;
   
-  const term = searchTerm.toLowerCase();
+  // Filter by pinned status first
+  if (showPinnedOnly) {
+    filteredNotes = filteredNotes.filter(note => note.isPinned);
+  }
   
-  return notes.filter(note => {
-    const titleMatch = note.title.toLowerCase().includes(term);
-    const contentMatch = note.isEncrypted 
-      ? false 
-      : note.content.toLowerCase().replace(/<[^>]*>/g, '').includes(term);
-    const tagsMatch = note.tags.some(tag => tag.toLowerCase().includes(term));
+  // Then filter by search term
+  if (searchTerm.trim()) {
+    const term = searchTerm.toLowerCase();
     
-    return titleMatch || contentMatch || tagsMatch;
-  });
+    filteredNotes = filteredNotes.filter(note => {
+      const titleMatch = note.title.toLowerCase().includes(term);
+      const contentMatch = note.isEncrypted 
+        ? false 
+        : note.content.toLowerCase().replace(/<[^>]*>/g, '').includes(term);
+      const tagsMatch = note.tags.some(tag => tag.toLowerCase().includes(term));
+      
+      return titleMatch || contentMatch || tagsMatch;
+    });
+  }
+  
+  return filteredNotes;
 };
 
 export const sortNotes = (notes: Note[]): Note[] => {

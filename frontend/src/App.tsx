@@ -14,6 +14,7 @@ function App() {
   const [notes, setNotes] = useState<Note[]>([]);
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showPinnedOnly, setShowPinnedOnly] = useState(false);
   const [showAIPanel, setShowAIPanel] = useState(true);
   const [showLeftPanel, setShowLeftPanel] = useState(true);
   const editorRef = useRef<HTMLDivElement>(null);
@@ -83,7 +84,7 @@ function App() {
     setNotes(updatedNotes);
   };
 
-  const filteredNotes = filterNotes(notes, searchTerm);
+  const filteredNotes = filterNotes(notes, searchTerm, showPinnedOnly);
 
   const handleStartApp = () => {
     setShowLanding(false);
@@ -109,8 +110,10 @@ function App() {
           </div>
           <div className="flex items-center gap-4">
             <SearchBar 
-              searchTerm={searchTerm}
+              searchTerm={searchTerm} 
               onSearchChange={setSearchTerm}
+              showPinnedOnly={showPinnedOnly}
+              onTogglePinnedFilter={() => setShowPinnedOnly(!showPinnedOnly)}
             />
             <button
               onClick={createNewNote}
@@ -138,6 +141,7 @@ function App() {
               onSelectNote={setSelectedNote}
               onDeleteNote={deleteNote}
               onTogglePin={togglePinNote}
+              showPinnedOnly={showPinnedOnly}
             />
           </div>
         )}
