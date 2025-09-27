@@ -77,3 +77,4 @@ notesummarize-ce339c680839.json
 # Temporary files
 *.tmp
 *.temp
+.vercel

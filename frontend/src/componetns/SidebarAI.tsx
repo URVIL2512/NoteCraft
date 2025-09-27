@@ -34,7 +34,7 @@ export default function SidebarAI({ note, editorRef, onUpdateNote }: SidebarAIPr
 
   async function callApi(path:string, body:any) {
     const baseUrl = import.meta.env.VITE_API_URL || 
-                   (process.env.NODE_ENV === 'production' 
+                   (import.meta.env.PROD 
                      ? '' 
                      : 'http://localhost:5173')
     
