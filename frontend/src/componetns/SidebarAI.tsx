@@ -33,9 +33,10 @@ export default function SidebarAI({ note, editorRef, onUpdateNote }: SidebarAIPr
   const [shareCopied, setShareCopied] = useState(false)
 
   async function callApi(path:string, body:any) {
-    const baseUrl = process.env.NODE_ENV === 'production' 
-      ? '' 
-      : 'http://localhost:5173'
+    const baseUrl = import.meta.env.VITE_API_URL || 
+                   (process.env.NODE_ENV === 'production' 
+                     ? 'https://your-backend-url.herokuapp.com' 
+                     : 'http://localhost:5173')
     
     const url = `${baseUrl}${path}`
     console.log('API call:', url, body)
