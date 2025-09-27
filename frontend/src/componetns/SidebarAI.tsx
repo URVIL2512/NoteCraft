@@ -30,8 +30,9 @@ export default function SidebarAI({ note, editorRef, onUpdateNote }: SidebarAIPr
   const [error, setError] = useState('')
 
   async function callApi(path:string, body:any) {
+    // Use relative URL for production (same domain), absolute for development
     const baseUrl = process.env.NODE_ENV === 'production' 
-      ? 'https://your-notecraft-app-name.herokuapp.com' 
+      ? '' // Same domain as frontend
       : 'http://localhost:5173'
     
     const res = await fetch(`${baseUrl}${path}`, {
