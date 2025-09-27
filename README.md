@@ -93,28 +93,31 @@ PlayPower/
 
 ## 🌐 Deployment
 
-### Heroku Deployment
+### Vercel Deployment
 
-1. **Install Heroku CLI**
-2. **Login to Heroku**
+1. **Install Vercel CLI**
    ```bash
-   heroku login
+   npm i -g vercel
    ```
 
-3. **Create Heroku app**
+2. **Login to Vercel**
    ```bash
-   heroku create your-app-name
+   vercel login
+   ```
+
+3. **Deploy**
+   ```bash
+   vercel
+   vercel --prod
    ```
 
 4. **Set environment variables**
-   ```bash
-   heroku config:set GOOGLE_API_KEY=your_api_key_here
+   In Vercel dashboard, add:
+   ```
+   GOOGLE_API_KEY = your_api_key_here
    ```
 
-5. **Deploy**
-   ```bash
-   git push heroku main
-   ```
+For detailed deployment instructions, see [VERCEL-DEPLOY.md](VERCEL-DEPLOY.md)
 
 ## 🔧 Configuration
 

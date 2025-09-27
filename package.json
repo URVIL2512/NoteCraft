@@ -5,8 +5,7 @@
   "scripts": {
     "build": "cd frontend && npm run build",
     "start": "cd backend && python app.py",
-    "dev": "concurrently \"cd backend && python app.py\" \"cd frontend && npm run dev\"",
-    "heroku-postbuild": "cd frontend && npm install && npm run build"
+    "dev": "concurrently \"cd backend && python app.py\" \"cd frontend && npm run dev\""
   },
   "dependencies": {
     "concurrently": "^8.2.2"

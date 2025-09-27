@@ -24,7 +24,7 @@ vercel
 echo.
 echo 4. Setting up environment variables...
 echo    You need to manually add this in Vercel dashboard:
-echo    VITE_API_URL = https://your-backend-url.herokuapp.com
+echo    GOOGLE_API_KEY = your_google_api_key_here
 echo.
 echo 5. Deploying to production...
 vercel --prod
@@ -35,9 +35,9 @@ echo.
 echo 📍 Your app will be available at: https://your-project.vercel.app
 echo.
 echo ⚠️  Remember to:
-echo    1. Deploy your backend to Heroku/Railway first
-echo    2. Update VITE_API_URL in Vercel dashboard
-echo    3. Update vercel.json with your actual backend URL
+echo    1. Set GOOGLE_API_KEY in Vercel dashboard
+echo    2. Create API functions in /api directory
+echo    3. Test all features after deployment
 echo.
 echo Press any key to exit...
 pause > nul

@@ -12,18 +12,15 @@
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "https://your-backend-url.herokuapp.com/api/$1"
+      "dest": "https://your-backend-url.vercel.app/api/$1"
     },
     {
       "src": "/shared/(.*)",
-      "dest": "https://your-backend-url.herokuapp.com/shared/$1"
+      "dest": "https://your-backend-url.vercel.app/shared/$1"
     },
     {
       "src": "/(.*)",
       "dest": "/frontend/dist/$1"
     }
-  ],
-  "env": {
-    "VITE_API_URL": "https://your-backend-url.herokuapp.com"
-  }
+  ]
 }
