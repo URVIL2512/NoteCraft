@@ -1,7 +1,17 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Note } from '../types/Note'
 import { Eye, Tag, CheckCircle, BookOpen, Share2, Copy, ExternalLink } from 'lucide-react'
 import { aiService } from '../services/aiService'
+
+interface AIPanelState {
+  summary: string
+  tags: string[]
+  grammarResult: { corrected?: string; issues?: any[]; hasChanges?: boolean }
+  glossary: { term: string; definition: string }[]
+  shareUrl: string
+  shareCopied: boolean
+  highlightOn: boolean
+}
 
 interface SidebarAIProps {
   note: Note
@@ -20,6 +30,9 @@ function textToHtml(text = '') {
 }
 
 export default function SidebarAI({ note, editorRef, onUpdateNote }: SidebarAIProps) {
+  // Store AI states per note
+  const aiStatesRef = useRef<Map<string, AIPanelState>>(new Map())
+  
   const [loadingSummary, setLoadingSummary] = useState(false)
   const [summary, setSummary] = useState('')
   const [loadingTags, setLoadingTags] = useState(false)
@@ -34,21 +47,73 @@ export default function SidebarAI({ note, editorRef, onUpdateNote }: SidebarAIPr
   const [shareUrl, setShareUrl] = useState('')
   const [shareCopied, setShareCopied] = useState(false)
 
-  // Reset all AI panel state when note changes
-  useEffect(() => {
-    setSummary('')
-    setTags([])
-    setGrammarResult({})
-    setGlossary([])
-    setShareUrl('')
-    setShareCopied(false)
+  // Save current state before switching notes
+  const saveCurrentState = () => {
+    if (note.id) {
+      const currentState: AIPanelState = {
+        summary,
+        tags,
+        grammarResult,
+        glossary,
+        shareUrl,
+        shareCopied,
+        highlightOn
+      }
+      aiStatesRef.current.set(note.id, currentState)
+    }
+  }
+
+  // Load state when switching to a note
+  const loadNoteState = (noteId: string) => {
+    const savedState = aiStatesRef.current.get(noteId)
+    if (savedState) {
+      setSummary(savedState.summary)
+      setTags(savedState.tags)
+      setGrammarResult(savedState.grammarResult)
+      setGlossary(savedState.glossary)
+      setShareUrl(savedState.shareUrl)
+      setShareCopied(savedState.shareCopied)
+      setHighlightOn(savedState.highlightOn)
+    } else {
+      // Initialize with empty state for new notes
+      setSummary('')
+      setTags([])
+      setGrammarResult({})
+      setGlossary([])
+      setShareUrl('')
+      setShareCopied(false)
+      setHighlightOn(false)
+    }
+    // Always clear loading states and errors
     setError('')
-    setHighlightOn(false)
     setLoadingSummary(false)
     setLoadingTags(false)
     setLoadingGrammar(false)
     setLoadingGlossary(false)
     setLoadingShare(false)
+  }
+
+  // Helper function to update state and save it
+  const updateState = (updates: Partial<AIPanelState>) => {
+    if (updates.summary !== undefined) setSummary(updates.summary)
+    if (updates.tags !== undefined) setTags(updates.tags)
+    if (updates.grammarResult !== undefined) setGrammarResult(updates.grammarResult)
+    if (updates.glossary !== undefined) setGlossary(updates.glossary)
+    if (updates.shareUrl !== undefined) setShareUrl(updates.shareUrl)
+    if (updates.shareCopied !== undefined) setShareCopied(updates.shareCopied)
+    if (updates.highlightOn !== undefined) setHighlightOn(updates.highlightOn)
+    
+    // Save the updated state
+    setTimeout(() => saveCurrentState(), 0)
+  }
+
+  // Handle note changes
+  useEffect(() => {
+    // Save current state before switching
+    saveCurrentState()
+    
+    // Load new note's state
+    loadNoteState(note.id)
     
     // Remove any existing highlights from the editor
     if (editorRef.current) {
@@ -79,10 +144,10 @@ export default function SidebarAI({ note, editorRef, onUpdateNote }: SidebarAIPr
   async function handleGenerateSummary() {
     setError('')
     setLoadingSummary(true)
-    setSummary('')
+    updateState({ summary: '' })
     try {
       const summary = await aiService.generateSummary(note.content || '')
-      setSummary(summary)
+      updateState({ summary })
     } catch (e:any) {
       setError('Failed to generate summary')
     } finally {
@@ -93,10 +158,10 @@ export default function SidebarAI({ note, editorRef, onUpdateNote }: SidebarAIPr
   async function handleSuggestTags() {
     setError('')
     setLoadingTags(true)
-    setTags([])
+    updateState({ tags: [] })
     try {
       const tags = await aiService.suggestTags(note.content || '')
-      setTags(tags)
+      updateState({ tags })
     } catch {
       setError('Failed to suggest tags')
     } finally {
@@ -107,16 +172,18 @@ export default function SidebarAI({ note, editorRef, onUpdateNote }: SidebarAIPr
   async function handleGrammarCheck() {
     setError('')
     setLoadingGrammar(true)
-    setGrammarResult({})
+    updateState({ grammarResult: {} })
     try {
       const text = stripHtml(note.content)
       const corrected = await aiService.checkGrammar(text)
       
       // Check if the corrected text is different from original
       const hasChanges = corrected && corrected.trim() !== text.trim()
-      setGrammarResult({
-        corrected: corrected,
-        hasChanges: hasChanges
+      updateState({
+        grammarResult: {
+          corrected: corrected,
+          hasChanges: hasChanges
+        }
       })
     } catch {
       setError('Failed to check grammar')
@@ -138,10 +205,10 @@ export default function SidebarAI({ note, editorRef, onUpdateNote }: SidebarAIPr
   async function handleGenerateGlossary() {
     setError('')
     setLoadingGlossary(true)
-    setGlossary([])
+    updateState({ glossary: [] })
     try {
       const terms = await aiService.generateGlossary(note.content || '')
-      setGlossary(terms)
+      updateState({ glossary: terms })
     } catch {
       setError('Failed to create glossary')
     } finally {
@@ -194,17 +261,17 @@ export default function SidebarAI({ note, editorRef, onUpdateNote }: SidebarAIPr
   function toggleHighlight() {
     if (!highlightOn) {
       highlightInEditor()
-      setHighlightOn(true)
+      updateState({ highlightOn: true })
       return
     }
     removeHighlights()
-    setHighlightOn(false)
+    updateState({ highlightOn: false })
   }
 
   async function handleShareNote() {
     setError('')
     setLoadingShare(true)
-    setShareCopied(false)
+    updateState({ shareCopied: false })
     try {
       console.log('Sharing note:', { 
         noteId: note.id,
@@ -223,7 +290,7 @@ export default function SidebarAI({ note, editorRef, onUpdateNote }: SidebarAIPr
       console.log('Share response:', data)
       
       const generatedUrl = data.shareUrl || data.url
-      setShareUrl(generatedUrl)
+      updateState({ shareUrl: generatedUrl })
       
       const updatedNote = { 
         ...note, 
@@ -244,8 +311,8 @@ export default function SidebarAI({ note, editorRef, onUpdateNote }: SidebarAIPr
   async function copyShareUrl() {
     if (shareUrl) {
       await navigator.clipboard.writeText(shareUrl)
-      setShareCopied(true)
-      setTimeout(() => setShareCopied(false), 2000)
+      updateState({ shareCopied: true })
+      setTimeout(() => updateState({ shareCopied: false }), 2000)
     }
   }
 
