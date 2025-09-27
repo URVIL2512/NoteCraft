@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Note } from '../types/Note'
 import { Eye, Tag, CheckCircle, BookOpen, Share2, Copy, ExternalLink } from 'lucide-react'
 import { aiService } from '../services/aiService'
@@ -33,6 +33,28 @@ export default function SidebarAI({ note, editorRef, onUpdateNote }: SidebarAIPr
   const [loadingShare, setLoadingShare] = useState(false)
   const [shareUrl, setShareUrl] = useState('')
   const [shareCopied, setShareCopied] = useState(false)
+
+  // Reset all AI panel state when note changes
+  useEffect(() => {
+    setSummary('')
+    setTags([])
+    setGrammarResult({})
+    setGlossary([])
+    setShareUrl('')
+    setShareCopied(false)
+    setError('')
+    setHighlightOn(false)
+    setLoadingSummary(false)
+    setLoadingTags(false)
+    setLoadingGrammar(false)
+    setLoadingGlossary(false)
+    setLoadingShare(false)
+    
+    // Remove any existing highlights from the editor
+    if (editorRef.current) {
+      removeHighlights()
+    }
+  }, [note.id])
 
   async function callApi(path:string, body:any) {
     try {
