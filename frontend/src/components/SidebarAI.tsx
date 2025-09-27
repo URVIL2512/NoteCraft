@@ -67,8 +67,13 @@ export default function SidebarAI({ note, editorRef, onUpdateNote }: SidebarAIPr
   const loadNoteState = (noteId: string) => {
     const savedState = aiStatesRef.current.get(noteId)
     
-    // Check if this is a new note (no content and no saved state)
-    const isNewNote = !note.content || note.content.trim() === '' || note.content === '<p><br></p>'
+    // Check if this is a new note (no content, no title, or very minimal content)
+    const isNewNote = !note.content || 
+                     note.content.trim() === '' || 
+                     note.content === '<p><br></p>' ||
+                     note.content === '<p></p>' ||
+                     note.content === '<div><br></div>' ||
+                     (note.title === 'Untitled Note' && note.content.trim() === '')
     
     if (isNewNote && !savedState) {
       // Clear all AI content for new notes
@@ -153,6 +158,28 @@ export default function SidebarAI({ note, editorRef, onUpdateNote }: SidebarAIPr
       removeHighlights()
     }
   }, [note.id])
+
+  // Additional effect to clear AI state when note content is empty
+  useEffect(() => {
+    const isNewNote = !note.content || 
+                     note.content.trim() === '' || 
+                     note.content === '<p><br></p>' ||
+                     note.content === '<p></p>' ||
+                     note.content === '<div><br></div>' ||
+                     (note.title === 'Untitled Note' && note.content.trim() === '')
+    
+    if (isNewNote) {
+      // Force clear all AI states for new notes
+      setSummary('')
+      setTags([])
+      setGlossary([])
+      setShareUrl('')
+      setShareCopied(false)
+      setHighlightOn(false)
+      setGrammarResult({})
+      setError('')
+    }
+  }, [note.content, note.title])
 
   async function callApi(path:string, body:any) {
     try {
