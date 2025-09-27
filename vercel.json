@@ -1,9 +1,4 @@
 {
-  "functions": {
-    "api/**/*.py": {
-      "runtime": "python3.9"
-    }
-  },
   "buildCommand": "cd frontend && npm install && npm run build",
   "outputDirectory": "frontend/dist",
   "framework": "vite"
