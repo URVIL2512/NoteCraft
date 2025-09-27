@@ -37,11 +37,21 @@ export default function SidebarAI({ note, editorRef, onUpdateNote }: SidebarAIPr
       ? '' 
       : 'http://localhost:5173'
     
-    const res = await fetch(`${baseUrl}${path}`, {
+    const url = `${baseUrl}${path}`
+    console.log('API call:', url, body)
+    
+    const res = await fetch(url, {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify(body)
     })
+    
+    console.log('API response status:', res.status)
+    
+    if (!res.ok) {
+      throw new Error(`HTTP error! status: ${res.status}`)
+    }
+    
     return res.json()
   }
 
@@ -177,12 +187,15 @@ export default function SidebarAI({ note, editorRef, onUpdateNote }: SidebarAIPr
     setLoadingShare(true)
     setShareCopied(false)
     try {
+      console.log('Sharing note:', note.id, note.title)
       const data = await callApi('/api/notes/share', { 
         noteId: note.id,
         title: note.title,
         content: note.content,
         tags: note.tags
       })
+      
+      console.log('Share response:', data)
       
       const generatedUrl = data.shareUrl || `${window.location.origin}/shared/${data.shareId}`
       setShareUrl(generatedUrl)
@@ -196,7 +209,8 @@ export default function SidebarAI({ note, editorRef, onUpdateNote }: SidebarAIPr
       }
       onUpdateNote(updatedNote)
       
-    } catch {
+    } catch (error) {
+      console.error('Share error:', error)
       setError('Failed to create shareable link')
     } finally {
       setLoadingShare(false)

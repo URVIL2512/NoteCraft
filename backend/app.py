@@ -82,39 +82,48 @@ def generate_glossary():
                     'definition': definition.strip()
                 })
         return jsonify({'terms': terms})
-        except Exception as error:
-            return jsonify({'error': 'Failed to generate glossary'}), 500
+    except Exception as error:
+        return jsonify({'error': 'Failed to generate glossary'}), 500
 
 @app.route('/api/notes/share', methods=['POST'])
 def share_note():
-    data = request.get_json()
-    note_id = data.get('noteId')
-    title = data.get('title', 'Untitled Note')
-    content = data.get('content', '')
-    tags = data.get('tags', [])
-    
-    # Generate unique share ID
-    share_id = str(uuid.uuid4())[:8]  # Short ID for URL
-    
-    # Store shared note
-    shared_notes[share_id] = {
-        'id': note_id,
-        'title': title,
-        'content': content,
-        'tags': tags,
-        'sharedAt': datetime.now().isoformat(),
-        'shareId': share_id
-    }
-    
-    # Generate share URL
-    base_url = request.host_url.rstrip('/')
-    share_url = f"{base_url}/shared/{share_id}"
-    
-    return jsonify({
-        'shareId': share_id,
-        'shareUrl': share_url,
-        'success': True
-    })
+    try:
+        print("Share endpoint called")
+        data = request.get_json()
+        print(f"Received data: {data}")
+        
+        note_id = data.get('noteId')
+        title = data.get('title', 'Untitled Note')
+        content = data.get('content', '')
+        tags = data.get('tags', [])
+        
+        # Generate unique share ID
+        share_id = str(uuid.uuid4())[:8]  # Short ID for URL
+        
+        # Store shared note
+        shared_notes[share_id] = {
+            'id': note_id,
+            'title': title,
+            'content': content,
+            'tags': tags,
+            'sharedAt': datetime.now().isoformat(),
+            'shareId': share_id
+        }
+        
+        # Generate share URL
+        base_url = request.host_url.rstrip('/')
+        share_url = f"{base_url}/shared/{share_id}"
+        
+        print(f"Generated share URL: {share_url}")
+        
+        return jsonify({
+            'shareId': share_id,
+            'shareUrl': share_url,
+            'success': True
+        })
+    except Exception as e:
+        print(f"Error in share_note: {e}")
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/notes/shared/<share_id>', methods=['GET'])
 def get_shared_note(share_id):
