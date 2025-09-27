@@ -67,16 +67,30 @@ export default function SidebarAI({ note, editorRef, onUpdateNote }: SidebarAIPr
   const loadNoteState = (noteId: string) => {
     const savedState = aiStatesRef.current.get(noteId)
     
-    // Load from note data first, then from saved state
-    setSummary(note.aiSummary || savedState?.summary || '')
-    setTags(note.aiTags || savedState?.tags || [])
-    setGlossary(note.aiGlossary || savedState?.glossary || [])
-    setShareUrl(note.shareUrl || savedState?.shareUrl || '')
-    setShareCopied(savedState?.shareCopied || false)
-    setHighlightOn(savedState?.highlightOn || false)
+    // Check if this is a new note (no content and no saved state)
+    const isNewNote = !note.content || note.content.trim() === '' || note.content === '<p><br></p>'
     
-    // Load grammar result from saved state (not stored in note)
-    setGrammarResult(savedState?.grammarResult || {})
+    if (isNewNote && !savedState) {
+      // Clear all AI content for new notes
+      setSummary('')
+      setTags([])
+      setGlossary([])
+      setShareUrl('')
+      setShareCopied(false)
+      setHighlightOn(false)
+      setGrammarResult({})
+    } else {
+      // Load from note data first, then from saved state for existing notes
+      setSummary(note.aiSummary || savedState?.summary || '')
+      setTags(note.aiTags || savedState?.tags || [])
+      setGlossary(note.aiGlossary || savedState?.glossary || [])
+      setShareUrl(note.shareUrl || savedState?.shareUrl || '')
+      setShareCopied(savedState?.shareCopied || false)
+      setHighlightOn(savedState?.highlightOn || false)
+      
+      // Load grammar result from saved state (not stored in note)
+      setGrammarResult(savedState?.grammarResult || {})
+    }
     
     // Always clear loading states and errors
     setError('')
