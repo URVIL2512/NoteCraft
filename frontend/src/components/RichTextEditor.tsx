@@ -27,10 +27,12 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ note, onUpdateNote, edi
   const titleRef = useRef<HTMLInputElement>(null);
   const [fontSize, setFontSize] = useState(16);
   const [showEncryption, setShowEncryption] = useState(false);
+  const [showDecryption, setShowDecryption] = useState(false);
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isDecrypted, setIsDecrypted] = useState(!note.isEncrypted);
   const [decryptionError, setDecryptionError] = useState('');
+  const [encryptionError, setEncryptionError] = useState('');
 
   useEffect(() => {
     if (editorRef.current && isDecrypted) {
@@ -49,9 +51,74 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ note, onUpdateNote, edi
   }, [note.id, note.content, note.title, note.isEncrypted]);
 
   const executeCommand = (command: string, value?: string) => {
-    // Note: Rich text formatting is not available with textarea
-    // This is a simple text editor now
-    editorRef.current?.focus();
+    if (!editorRef.current) return;
+    
+    const textarea = editorRef.current;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = textarea.value.substring(start, end);
+    const beforeText = textarea.value.substring(0, start);
+    const afterText = textarea.value.substring(end);
+    
+    let newText = '';
+    
+    switch (command) {
+      case 'bold':
+        if (selectedText) {
+          newText = `**${selectedText}**`;
+        } else {
+          newText = '**bold text**';
+        }
+        break;
+      case 'italic':
+        if (selectedText) {
+          newText = `*${selectedText}*`;
+        } else {
+          newText = '*italic text*';
+        }
+        break;
+      case 'underline':
+        if (selectedText) {
+          newText = `<u>${selectedText}</u>`;
+        } else {
+          newText = '<u>underlined text</u>';
+        }
+        break;
+      case 'justifyLeft':
+        if (selectedText) {
+          newText = selectedText;
+        } else {
+          newText = 'Left aligned text';
+        }
+        break;
+      case 'justifyCenter':
+        if (selectedText) {
+          newText = `\n\n${selectedText}\n\n`;
+        } else {
+          newText = '\n\nCentered text\n\n';
+        }
+        break;
+      case 'justifyRight':
+        if (selectedText) {
+          newText = `\t\t\t${selectedText}`;
+        } else {
+          newText = '\t\t\tRight aligned text';
+        }
+        break;
+      default:
+        return;
+    }
+    
+    const newContent = beforeText + newText + afterText;
+    const updatedNote = { ...note, content: newContent };
+    onUpdateNote(updatedNote);
+    
+    // Focus and set cursor position
+    textarea.focus();
+    setTimeout(() => {
+      const newCursorPos = start + newText.length;
+      textarea.setSelectionRange(newCursorPos, newCursorPos);
+    }, 0);
   };
 
 
@@ -72,7 +139,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ note, onUpdateNote, edi
 
   const encryptNote = () => {
     if (!password.trim()) {
-      alert('Please enter a password');
+      setEncryptionError('Please enter a password');
       return;
     }
     try {
@@ -87,8 +154,9 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ note, onUpdateNote, edi
       setIsDecrypted(false);
       setShowEncryption(false);
       setPassword('');
+      setEncryptionError('');
     } catch {
-      alert('Failed to encrypt note');
+      setEncryptionError('Failed to encrypt note');
     }
   };
 
@@ -107,10 +175,26 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ note, onUpdateNote, edi
       };
       onUpdateNote(updatedNote);
       setIsDecrypted(true);
+      setShowDecryption(false);
       setPassword('');
       setDecryptionError('');
     } catch {
       setDecryptionError('Incorrect password or corrupted data');
+    }
+  };
+
+  const removePassword = () => {
+    if (window.confirm('Are you sure you want to remove password protection from this note?')) {
+      const updatedNote = { 
+        ...note, 
+        isEncrypted: false, 
+        encryptedContent: undefined 
+      };
+      onUpdateNote(updatedNote);
+      setIsDecrypted(true);
+      setShowDecryption(false);
+      setPassword('');
+      setDecryptionError('');
     }
   };
 
@@ -145,12 +229,20 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ note, onUpdateNote, edi
               </button>
             </div>
             {decryptionError && <p className="text-red-600 text-sm">{decryptionError}</p>}
-            <button
-              onClick={decryptNote}
-              className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Decrypt Note
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={decryptNote}
+                className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Decrypt Note
+              </button>
+              <button
+                onClick={removePassword}
+                className="flex-1 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
+              >
+                Remove Password
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -212,22 +304,17 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ note, onUpdateNote, edi
                 title="Encrypt Note"
               >
                 <Lock className="h-4 w-4" />
-                Encrypt
+                Set Password
               </button>
             )}
             {note.isEncrypted && (
               <button
-                onClick={() => {
-                  if (window.confirm('Are you sure you want to remove encryption from this note?')) {
-                    const updatedNote = { ...note, isEncrypted: false, encryptedContent: undefined };
-                    onUpdateNote(updatedNote);
-                  }
-                }}
-                className="flex items-center gap-2 px-3 py-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
-                title="Remove Encryption"
+                onClick={() => setShowDecryption(true)}
+                className="flex items-center gap-2 px-3 py-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
+                title="Enter Password"
               >
                 <Unlock className="h-4 w-4" />
-                Remove Encryption
+                Enter Password
               </button>
             )}
           </div>
@@ -243,7 +330,10 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ note, onUpdateNote, edi
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    setEncryptionError('');
+                  }}
                   placeholder="Enter a strong password"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-10"
                 />
@@ -255,10 +345,15 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ note, onUpdateNote, edi
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
+              {encryptionError && <p className="text-red-600 text-sm mt-1">{encryptionError}</p>}
             </div>
             <div className="flex gap-2">
               <button onClick={encryptNote} className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">Encrypt</button>
-              <button onClick={() => setShowEncryption(false)} className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition-colors">Cancel</button>
+              <button onClick={() => {
+                setShowEncryption(false);
+                setPassword('');
+                setEncryptionError('');
+              }} className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition-colors">Cancel</button>
             </div>
           </div>
         </div>

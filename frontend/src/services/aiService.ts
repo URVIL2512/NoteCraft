@@ -8,7 +8,7 @@ export interface AIService {
   class RealAIService implements AIService {
     private async callAPI(endpoint: string, data: any): Promise<any> {
       try {
-        const response = await fetch(`/api/ai/${endpoint}`, {
+        const response = await fetch(`http://localhost:5000/api/ai/${endpoint}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -59,7 +59,16 @@ export interface AIService {
       }
       
       const data = await this.callAPI('grammar', { text: textContent });
-      return data.corrected || content;
+      let corrected = data.corrected || content;
+      
+      // Clean up any extra text that might come from the AI response
+      // Remove common prefixes that AI might add
+      corrected = corrected.replace(/^(Here's the corrected version:|Corrected text:|Fixed version:)\s*/i, '');
+      corrected = corrected.replace(/^\*\*.*?\*\*:\s*/g, ''); // Remove **text**: patterns
+      corrected = corrected.replace(/^Original Text:\s*/i, '');
+      corrected = corrected.replace(/^Corrected Text:\s*/i, '');
+      
+      return corrected.trim() || content;
     }
 
     async generateGlossary(content: string): Promise<{ term: string; definition: string }[]> {

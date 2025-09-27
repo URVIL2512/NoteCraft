@@ -55,7 +55,7 @@ def generate_tags():
 def check_grammar():
     data = request.get_json()
     text = data.get('text', '')
-    prompt = f"Check the grammar and spelling of the following text and provide the corrected version:\n\n{text}"
+    prompt = f"Check the grammar and spelling of the following text and provide ONLY the corrected version without any explanations or additional text:\n\n{text}"
     
     try:
         corrected = call_gemini(prompt)
@@ -205,7 +205,7 @@ def view_shared_note(share_id):
     '''
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5173))
+    port = int(os.environ.get('PORT', 5000))
     print(f'Backend server running on port {port}')
     print('Using Google Cloud service account authentication')
     app.run(host='0.0.0.0', port=port, debug=False)

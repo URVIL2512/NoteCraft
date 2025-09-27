@@ -181,12 +181,21 @@ export default function SidebarAI({ note, editorRef, onUpdateNote }: SidebarAIPr
     setLoadingShare(true)
     setShareCopied(false)
     try {
-      const data = await callApi('/api/notes/share', { 
+      console.log('Sharing note:', { 
+        noteId: note.id,
+        title: note.title,
+        content: note.content?.substring(0, 100) + '...',
+        tags: note.tags
+      })
+      
+      const data = await callApi('http://localhost:5000/api/notes/share', { 
         noteId: note.id,
         title: note.title,
         content: note.content,
         tags: note.tags
       })
+      
+      console.log('Share response:', data)
       
       const generatedUrl = data.shareUrl || data.url
       setShareUrl(generatedUrl)
@@ -201,7 +210,7 @@ export default function SidebarAI({ note, editorRef, onUpdateNote }: SidebarAIPr
       
     } catch (error) {
       console.error('Share error:', error)
-      setError('Failed to create shareable link')
+      setError(`Failed to create shareable link: ${error.message || error}`)
     } finally {
       setLoadingShare(false)
     }
