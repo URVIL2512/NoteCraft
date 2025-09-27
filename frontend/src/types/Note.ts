@@ -12,4 +12,10 @@ export interface Note {
     shareUrl?: string;
     createdAt: string;
     updatedAt: string;
+    // AI-generated content
+    aiSummary?: string;
+    aiTags?: string[];
+    aiGlossary?: { term: string; definition: string }[];
+    hasGrammarCheck?: boolean;
+    hasShareLink?: boolean;
   }

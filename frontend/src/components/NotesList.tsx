@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pin, Trash2, Lock, Calendar } from 'lucide-react';
+import { Pin, Trash2, Lock, Calendar, FileText, Tag, BookOpen, CheckCircle, Share2 } from 'lucide-react';
 import { Note } from '../types/Note';
 
 interface NotesListProps {
@@ -37,6 +37,16 @@ const NotesList: React.FC<NotesListProps> = ({
     
     const textContent = content.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
     return textContent.slice(0, 120) + (textContent.length > 120 ? '...' : '');
+  };
+
+  const getAIStatus = (note: Note) => {
+    const status = [];
+    if (note.aiSummary) status.push({ icon: FileText, label: 'Summary', color: 'text-blue-500' });
+    if (note.aiTags && note.aiTags.length > 0) status.push({ icon: Tag, label: 'AI Tags', color: 'text-green-500' });
+    if (note.aiGlossary && note.aiGlossary.length > 0) status.push({ icon: BookOpen, label: 'Glossary', color: 'text-purple-500' });
+    if (note.hasGrammarCheck) status.push({ icon: CheckCircle, label: 'Grammar', color: 'text-orange-500' });
+    if (note.hasShareLink) status.push({ icon: Share2, label: 'Shared', color: 'text-indigo-500' });
+    return status;
   };
 
   return (
@@ -80,12 +90,58 @@ const NotesList: React.FC<NotesListProps> = ({
                     {note.isEncrypted && (
                       <Lock className="h-4 w-4 text-red-500" />
                     )}
+                    {/* AI Status Indicators */}
+                    {getAIStatus(note).map((status, index) => (
+                      <status.icon 
+                        key={index} 
+                        className={`h-4 w-4 ${status.color}`} 
+                        title={status.label}
+                      />
+                    ))}
                   </div>
                 </div>
 
-                <p className="text-sm text-gray-600 mb-3 leading-relaxed">
-                  {getContentPreview(note.content, note.isEncrypted)}
-                </p>
+                {/* Show AI Summary if available, otherwise show content preview */}
+                {note.aiSummary ? (
+                  <div className="mb-3">
+                    <div className="flex items-center gap-1 mb-1">
+                      <FileText className="h-3 w-3 text-blue-500" />
+                      <span className="text-xs font-medium text-blue-600">AI Summary:</span>
+                    </div>
+                    <p className="text-sm text-gray-700 leading-relaxed bg-blue-50 p-2 rounded border-l-2 border-blue-200">
+                      {note.aiSummary.slice(0, 150) + (note.aiSummary.length > 150 ? '...' : '')}
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-600 mb-3 leading-relaxed">
+                    {getContentPreview(note.content, note.isEncrypted)}
+                  </p>
+                )}
+
+                {/* Show AI Tags if available */}
+                {note.aiTags && note.aiTags.length > 0 && (
+                  <div className="mb-3">
+                    <div className="flex items-center gap-1 mb-1">
+                      <Tag className="h-3 w-3 text-green-500" />
+                      <span className="text-xs font-medium text-green-600">AI Tags:</span>
+                    </div>
+                    <div className="flex flex-wrap gap-1">
+                      {note.aiTags.slice(0, 4).map((tag, index) => (
+                        <span
+                          key={index}
+                          className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                      {note.aiTags.length > 4 && (
+                        <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
+                          +{note.aiTags.length - 4}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 {note.tags.length > 0 && (
                   <div className="flex flex-wrap gap-1 mb-3">

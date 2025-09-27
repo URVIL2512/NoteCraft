@@ -66,24 +66,18 @@ export default function SidebarAI({ note, editorRef, onUpdateNote }: SidebarAIPr
   // Load state when switching to a note
   const loadNoteState = (noteId: string) => {
     const savedState = aiStatesRef.current.get(noteId)
-    if (savedState) {
-      setSummary(savedState.summary)
-      setTags(savedState.tags)
-      setGrammarResult(savedState.grammarResult)
-      setGlossary(savedState.glossary)
-      setShareUrl(savedState.shareUrl)
-      setShareCopied(savedState.shareCopied)
-      setHighlightOn(savedState.highlightOn)
-    } else {
-      // Initialize with empty state for new notes
-      setSummary('')
-      setTags([])
-      setGrammarResult({})
-      setGlossary([])
-      setShareUrl('')
-      setShareCopied(false)
-      setHighlightOn(false)
-    }
+    
+    // Load from note data first, then from saved state
+    setSummary(note.aiSummary || savedState?.summary || '')
+    setTags(note.aiTags || savedState?.tags || [])
+    setGlossary(note.aiGlossary || savedState?.glossary || [])
+    setShareUrl(note.shareUrl || savedState?.shareUrl || '')
+    setShareCopied(savedState?.shareCopied || false)
+    setHighlightOn(savedState?.highlightOn || false)
+    
+    // Load grammar result from saved state (not stored in note)
+    setGrammarResult(savedState?.grammarResult || {})
+    
     // Always clear loading states and errors
     setError('')
     setLoadingSummary(false)
@@ -93,13 +87,38 @@ export default function SidebarAI({ note, editorRef, onUpdateNote }: SidebarAIPr
     setLoadingShare(false)
   }
 
-  // Helper function to update state and save it
+  // Helper function to update state and save it to note
   const updateState = (updates: Partial<AIPanelState>) => {
-    if (updates.summary !== undefined) setSummary(updates.summary)
-    if (updates.tags !== undefined) setTags(updates.tags)
-    if (updates.grammarResult !== undefined) setGrammarResult(updates.grammarResult)
-    if (updates.glossary !== undefined) setGlossary(updates.glossary)
-    if (updates.shareUrl !== undefined) setShareUrl(updates.shareUrl)
+    if (updates.summary !== undefined) {
+      setSummary(updates.summary)
+      // Save summary to note
+      const updatedNote = { ...note, aiSummary: updates.summary }
+      onUpdateNote(updatedNote)
+    }
+    if (updates.tags !== undefined) {
+      setTags(updates.tags)
+      // Save AI tags to note
+      const updatedNote = { ...note, aiTags: updates.tags }
+      onUpdateNote(updatedNote)
+    }
+    if (updates.grammarResult !== undefined) {
+      setGrammarResult(updates.grammarResult)
+      // Mark that grammar check was done
+      const updatedNote = { ...note, hasGrammarCheck: !!updates.grammarResult.corrected }
+      onUpdateNote(updatedNote)
+    }
+    if (updates.glossary !== undefined) {
+      setGlossary(updates.glossary)
+      // Save glossary to note
+      const updatedNote = { ...note, aiGlossary: updates.glossary }
+      onUpdateNote(updatedNote)
+    }
+    if (updates.shareUrl !== undefined) {
+      setShareUrl(updates.shareUrl)
+      // Mark that share link was created
+      const updatedNote = { ...note, hasShareLink: !!updates.shareUrl }
+      onUpdateNote(updatedNote)
+    }
     if (updates.shareCopied !== undefined) setShareCopied(updates.shareCopied)
     if (updates.highlightOn !== undefined) setHighlightOn(updates.highlightOn)
     
