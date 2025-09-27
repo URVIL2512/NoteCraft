@@ -111,3 +111,8 @@ temp/
 
 # Google AI credentials
 notesummarize-*.json
+
+# Test files
+test-*.py
+*test*.py
+list-models.py
