@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { Plus, Settings, Menu, X } from 'lucide-react';
-import RichTextEditor from './componetns/RichTextEditor';
-import NotesList from './componetns/NotesList';
-import SearchBar from './componetns/SearchBar';
-import SidebarAI from './componetns/SidebarAI';
-import LandingPage from './componetns/LandingPage';
+import RichTextEditor from './components/RichTextEditor';
+import NotesList from './components/NotesList';
+import SearchBar from './components/SearchBar';
+import SidebarAI from './components/SidebarAI';
+import LandingPage from './components/LandingPage';
 import { Note } from './types/Note';
 import { loadNotes, saveNotes } from './utils/storage';
 import { filterNotes } from './utils/noteUtils';

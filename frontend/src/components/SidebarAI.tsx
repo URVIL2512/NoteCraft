@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Note } from '../types/Note'
 import { Eye, Tag, CheckCircle, BookOpen, Share2, Copy, ExternalLink } from 'lucide-react'
+import { aiService } from '../services/aiService'
 
 interface SidebarAIProps {
   note: Note
@@ -33,27 +34,23 @@ export default function SidebarAI({ note, editorRef, onUpdateNote }: SidebarAIPr
   const [shareCopied, setShareCopied] = useState(false)
 
   async function callApi(path:string, body:any) {
-    const baseUrl = import.meta.env.VITE_API_URL || 
-                   (import.meta.env.PROD 
-                     ? '' 
-                     : 'http://localhost:5173')
-    
-    const url = `${baseUrl}${path}`
-    console.log('API call:', url, body)
-    
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify(body)
-    })
-    
-    console.log('API response status:', res.status)
-    
-    if (!res.ok) {
-      throw new Error(`HTTP error! status: ${res.status}`)
+    try {
+      const res = await fetch(path, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(body)
+      })
+      
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({ error: `HTTP ${res.status}` }))
+        throw new Error(errorData.error || `HTTP ${res.status}`)
+      }
+      
+      return res.json()
+    } catch (error) {
+      console.error('API call failed:', error)
+      throw error
     }
-    
-    return res.json()
   }
 
   async function handleGenerateSummary() {
@@ -61,9 +58,8 @@ export default function SidebarAI({ note, editorRef, onUpdateNote }: SidebarAIPr
     setLoadingSummary(true)
     setSummary('')
     try {
-      const text = note.content || ''
-      const data = await callApi('/api/ai/summary', { text, length: 'short' })
-      setSummary(data.summary || data.result || '')
+      const summary = await aiService.generateSummary(note.content || '')
+      setSummary(summary)
     } catch (e:any) {
       setError('Failed to generate summary')
     } finally {
@@ -76,9 +72,8 @@ export default function SidebarAI({ note, editorRef, onUpdateNote }: SidebarAIPr
     setLoadingTags(true)
     setTags([])
     try {
-      const text = note.content || ''
-      const data = await callApi('/api/ai/tags', { text, max: 10 })
-      setTags(data.tags || [])
+      const tags = await aiService.suggestTags(note.content || '')
+      setTags(tags)
     } catch {
       setError('Failed to suggest tags')
     } finally {
@@ -91,13 +86,13 @@ export default function SidebarAI({ note, editorRef, onUpdateNote }: SidebarAIPr
     setLoadingGrammar(true)
     setGrammarResult({})
     try {
-      const text = note.content || ''
-      const data = await callApi('/api/ai/grammar', { text })
+      const text = stripHtml(note.content)
+      const corrected = await aiService.checkGrammar(text)
       
       // Check if the corrected text is different from original
-      const hasChanges = data.corrected && data.corrected.trim() !== text.trim()
+      const hasChanges = corrected && corrected.trim() !== text.trim()
       setGrammarResult({
-        ...data,
+        corrected: corrected,
         hasChanges: hasChanges
       })
     } catch {
@@ -120,10 +115,8 @@ export default function SidebarAI({ note, editorRef, onUpdateNote }: SidebarAIPr
     setLoadingGlossary(true)
     setGlossary([])
     try {
-      const text = note.content || ''
-      const data = await callApi('/api/ai/glossary', { text, maxTerms: 20 })
-      const list = data.terms || []
-      setGlossary(list)
+      const terms = await aiService.generateGlossary(note.content || '')
+      setGlossary(terms)
     } catch {
       setError('Failed to create glossary')
     } finally {
@@ -188,7 +181,6 @@ export default function SidebarAI({ note, editorRef, onUpdateNote }: SidebarAIPr
     setLoadingShare(true)
     setShareCopied(false)
     try {
-      console.log('Sharing note:', note.id, note.title)
       const data = await callApi('/api/notes/share', { 
         noteId: note.id,
         title: note.title,
@@ -196,12 +188,9 @@ export default function SidebarAI({ note, editorRef, onUpdateNote }: SidebarAIPr
         tags: note.tags
       })
       
-      console.log('Share response:', data)
-      
-      const generatedUrl = data.shareUrl || `${window.location.origin}/shared/${data.shareId}`
+      const generatedUrl = data.shareUrl || data.url
       setShareUrl(generatedUrl)
       
-      // Update the note with sharing info
       const updatedNote = { 
         ...note, 
         isShared: true, 

@@ -93,31 +93,7 @@ PlayPower/
 
 ## 🌐 Deployment
 
-### Vercel Deployment
-
-1. **Install Vercel CLI**
-   ```bash
-   npm i -g vercel
-   ```
-
-2. **Login to Vercel**
-   ```bash
-   vercel login
-   ```
-
-3. **Deploy**
-   ```bash
-   vercel
-   vercel --prod
-   ```
-
-4. **Set environment variables**
-   In Vercel dashboard, add:
-   ```
-   GOOGLE_API_KEY = your_api_key_here
-   ```
-
-For detailed deployment instructions, see [VERCEL-DEPLOY.md](VERCEL-DEPLOY.md)
+Deploy your application using your preferred hosting platform. Make sure to set the `GOOGLE_API_KEY` environment variable in your deployment environment.
 
 ## 🔧 Configuration
 
