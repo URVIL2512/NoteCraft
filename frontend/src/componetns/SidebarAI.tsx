@@ -35,7 +35,7 @@ export default function SidebarAI({ note, editorRef, onUpdateNote }: SidebarAIPr
   async function callApi(path:string, body:any) {
     const baseUrl = import.meta.env.VITE_API_URL || 
                    (process.env.NODE_ENV === 'production' 
-                     ? 'https://your-backend-url.vercel.app' 
+                     ? '' 
                      : 'http://localhost:5173')
     
     const url = `${baseUrl}${path}`
