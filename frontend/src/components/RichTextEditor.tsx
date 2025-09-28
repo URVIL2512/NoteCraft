@@ -36,11 +36,22 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ note, onUpdateNote, edi
 
   useEffect(() => {
     if (editorRef.current && isDecrypted) {
-      // Force LTR direction for textarea
+      // Force LTR direction aggressively
       editorRef.current.style.direction = 'ltr';
       editorRef.current.style.textAlign = 'left';
       editorRef.current.style.unicodeBidi = 'normal';
+      editorRef.current.style.writingMode = 'horizontal-tb';
       editorRef.current.setAttribute('dir', 'ltr');
+      editorRef.current.setAttribute('style', 'direction: ltr !important; text-align: left !important; unicode-bidi: normal !important; writing-mode: horizontal-tb !important;');
+      
+      // Force LTR on all child elements
+      const allElements = editorRef.current.querySelectorAll('*');
+      allElements.forEach(el => {
+        (el as HTMLElement).style.direction = 'ltr';
+        (el as HTMLElement).style.textAlign = 'left';
+        (el as HTMLElement).style.unicodeBidi = 'normal';
+        (el as HTMLElement).setAttribute('dir', 'ltr');
+      });
     }
     if (titleRef.current) {
       titleRef.current.value = note.title;
@@ -50,6 +61,25 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ note, onUpdateNote, edi
     setDecryptionError('');
   }, [note.id, note.content, note.title, note.isEncrypted]);
 
+  const enforceLTR = () => {
+    if (!editorRef.current) return;
+    
+    // Force LTR on the editor and all its children
+    editorRef.current.style.direction = 'ltr';
+    editorRef.current.style.textAlign = 'left';
+    editorRef.current.style.unicodeBidi = 'normal';
+    editorRef.current.setAttribute('dir', 'ltr');
+    
+    // Force LTR on all child elements
+    const allElements = editorRef.current.querySelectorAll('*');
+    allElements.forEach(el => {
+      (el as HTMLElement).style.direction = 'ltr';
+      (el as HTMLElement).style.textAlign = 'left';
+      (el as HTMLElement).style.unicodeBidi = 'normal';
+      (el as HTMLElement).setAttribute('dir', 'ltr');
+    });
+  };
+
   const executeCommand = (command: string, value?: string) => {
     if (!editorRef.current) return;
     
@@ -58,6 +88,9 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ note, onUpdateNote, edi
     
     // Execute the formatting command
     document.execCommand(command, false, value);
+    
+    // Enforce LTR after command execution
+    enforceLTR();
     
     // Update the note content with the formatted HTML
     const updatedNote = { ...note, content: editorRef.current.innerHTML };
@@ -215,6 +248,12 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ note, onUpdateNote, edi
           onChange={handleTitleChange}
           className="w-full text-2xl font-bold border-none outline-none bg-transparent text-gray-900 placeholder-gray-400"
           placeholder="Note title..."
+          dir="ltr"
+          style={{
+            direction: 'ltr',
+            textAlign: 'left',
+            unicodeBidi: 'normal'
+          }}
         />
         <div className="flex items-center justify-between mt-4">
           <div className="flex items-center gap-2 flex-wrap">
@@ -322,8 +361,19 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ note, onUpdateNote, edi
           contentEditable
           dangerouslySetInnerHTML={{ __html: note.content }}
           onInput={(e) => {
+            // Enforce LTR on every input
+            enforceLTR();
+            
             const updatedNote = { ...note, content: e.currentTarget.innerHTML };
             onUpdateNote(updatedNote);
+          }}
+          onKeyDown={(e) => {
+            // Enforce LTR on every key press
+            setTimeout(() => enforceLTR(), 0);
+          }}
+          onPaste={(e) => {
+            // Enforce LTR after paste
+            setTimeout(() => enforceLTR(), 0);
           }}
           className="flex-1 w-full h-full p-6 outline-none resize-none border-none overflow-y-auto"
           style={{

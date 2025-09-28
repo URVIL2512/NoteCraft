@@ -1,13 +1,54 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" dir="ltr">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="text-direction" content="ltr" />
     <title>NoteCraft - Intelligent Note Taking</title>
+    <style>
+      /* Prevent any RTL auto-detection */
+      * {
+        direction: ltr !important;
+        text-align: left !important;
+        unicode-bidi: normal !important;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      // Force LTR on page load and continuously monitor
+      function enforceLTR() {
+        document.body.style.direction = 'ltr';
+        document.body.style.textAlign = 'left';
+        document.body.setAttribute('dir', 'ltr');
+        
+        // Force LTR on all elements
+        const allElements = document.querySelectorAll('*');
+        allElements.forEach(el => {
+          el.style.direction = 'ltr';
+          el.style.textAlign = 'left';
+          el.style.unicodeBidi = 'normal';
+          el.setAttribute('dir', 'ltr');
+        });
+      }
+      
+      // Run on page load
+      document.addEventListener('DOMContentLoaded', enforceLTR);
+      
+      // Run continuously to catch any dynamic changes
+      setInterval(enforceLTR, 1000);
+      
+      // Run on any DOM changes
+      const observer = new MutationObserver(enforceLTR);
+      observer.observe(document.body, { 
+        childList: true, 
+        subtree: true, 
+        attributes: true 
+      });
+    </script>
   </body>
 </html>

@@ -34,6 +34,17 @@ html, body, * {
   writing-mode: horizontal-tb !important;
 }
 
+/* Force LTR on root elements */
+html {
+  dir: ltr !important;
+  direction: ltr !important;
+}
+
+body {
+  direction: ltr !important;
+  text-align: left !important;
+}
+
 /* Extra strong targeting for contentEditable */
 [contenteditable], [contenteditable="true"], [contenteditable=""] {
   direction: ltr !important;
@@ -41,6 +52,33 @@ html, body, * {
   unicode-bidi: normal !important;
   writing-mode: horizontal-tb !important;
   text-direction: ltr !important;
+}
+
+/* Nuclear option for contentEditable - force LTR at all costs */
+[contenteditable] * {
+  direction: ltr !important;
+  text-align: left !important;
+  unicode-bidi: normal !important;
+  writing-mode: horizontal-tb !important;
+}
+
+/* Force LTR on any element that might be inside contentEditable */
+[contenteditable] p,
+[contenteditable] div,
+[contenteditable] span,
+[contenteditable] strong,
+[contenteditable] em,
+[contenteditable] u,
+[contenteditable] h1,
+[contenteditable] h2,
+[contenteditable] h3,
+[contenteditable] h4,
+[contenteditable] h5,
+[contenteditable] h6 {
+  direction: ltr !important;
+  text-align: left !important;
+  unicode-bidi: normal !important;
+  writing-mode: horizontal-tb !important;
 }
 
 /* Force all text inputs */
@@ -70,6 +108,63 @@ textarea {
 
 /* Override any inherited styles */
 .prose, .prose * {
+  direction: ltr !important;
+  text-align: left !important;
+  unicode-bidi: normal !important;
+}
+
+/* Force LTR on all React components and UI elements */
+#root, #root * {
+  direction: ltr !important;
+  text-align: left !important;
+}
+
+/* Specific targeting for common UI patterns */
+button, input, select, textarea, div, span, p, h1, h2, h3, h4, h5, h6 {
+  direction: ltr !important;
+  text-align: left !important;
+}
+
+/* Force LTR on flexbox and grid layouts */
+.flex, .grid, [class*="flex"], [class*="grid"] {
+  direction: ltr !important;
+}
+
+/* Ensure text flows left to right in all containers */
+.container, .wrapper, .content, .main, .sidebar, .panel {
+  direction: ltr !important;
+  text-align: left !important;
+}
+
+/* Prevent any browser auto-detection of RTL languages */
+html[lang], body, #root {
+  direction: ltr !important;
+  text-align: left !important;
+  unicode-bidi: normal !important;
+}
+
+/* Override any inherited RTL from parent elements */
+* {
+  direction: ltr !important;
+  text-align: left !important;
+  unicode-bidi: normal !important;
+  writing-mode: horizontal-tb !important;
+}
+
+/* Specific override for any potential RTL classes or attributes */
+[dir="rtl"], .rtl, [class*="rtl"] {
+  direction: ltr !important;
+  text-align: left !important;
+  unicode-bidi: normal !important;
+}
+
+/* Force LTR on all form elements */
+input[type="text"], 
+input[type="email"], 
+input[type="password"], 
+input[type="search"], 
+textarea, 
+select {
   direction: ltr !important;
   text-align: left !important;
   unicode-bidi: normal !important;
