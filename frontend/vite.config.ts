@@ -5,7 +5,10 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 3000,
-    open: true
+    open: true,
+    headers: {
+      'Cache-Control': 'public, max-age=31536000'
+    }
   },
   build: {
     outDir: 'dist',

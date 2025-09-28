@@ -30,13 +30,27 @@ const AIPanel: React.FC<AIPanelProps> = ({ note, onUpdateNote }) => {
 
   useEffect(() => {
     if (note.content && !note.isEncrypted) {
-      generateGlossary();
+      const fetchGlossary = async () => {
+        setLoading(prev => ({ ...prev, glossary: true }));
+        try {
+          const termsArray = await aiService.generateGlossary(note.content);
+          const termsObject: { [key: string]: string } = {};
+          termsArray.forEach(({ term, definition }) => {
+            termsObject[term] = definition;
+          });
+          setGlossaryTerms(termsObject);
+        } catch (error) {
+          console.error('Failed to generate glossary:', error);
+        } finally {
+          setLoading(prev => ({ ...prev, glossary: false }));
+        }
+      };
+      fetchGlossary();
     }
   }, [note.content, note.isEncrypted]);
 
   const generateSummary = async () => {
     if (note.isEncrypted) return;
-    
     setLoading(prev => ({ ...prev, summary: true }));
     try {
       const summaryText = await aiService.generateSummary(note.content);
@@ -50,7 +64,6 @@ const AIPanel: React.FC<AIPanelProps> = ({ note, onUpdateNote }) => {
 
   const generateTags = async () => {
     if (note.isEncrypted) return;
-    
     setLoading(prev => ({ ...prev, tags: true }));
     try {
       const tags = await aiService.suggestTags(note.content);
@@ -64,11 +77,10 @@ const AIPanel: React.FC<AIPanelProps> = ({ note, onUpdateNote }) => {
 
   const checkGrammar = async () => {
     if (note.isEncrypted) return;
-    
     setLoading(prev => ({ ...prev, grammar: true }));
     try {
       const issues = await aiService.checkGrammar(note.content);
-      setGrammarIssues(issues);
+      setGrammarIssues(Array.isArray(issues) ? issues : [issues]);
     } catch (error) {
       console.error('Failed to check grammar:', error);
     } finally {
@@ -76,36 +88,14 @@ const AIPanel: React.FC<AIPanelProps> = ({ note, onUpdateNote }) => {
     }
   };
 
-  const generateGlossary = async () => {
-    if (note.isEncrypted) return;
-    
-    setLoading(prev => ({ ...prev, glossary: true }));
-    try {
-      const terms = await aiService.generateGlossary(note.content);
-      setGlossaryTerms(terms);
-    } catch (error) {
-      console.error('Failed to generate glossary:', error);
-    } finally {
-      setLoading(prev => ({ ...prev, glossary: false }));
-    }
-  };
-
   const addTagToNote = (tag: string) => {
     if (!note.tags.includes(tag)) {
-      const updatedNote = {
-        ...note,
-        tags: [...note.tags, tag]
-      };
-      onUpdateNote(updatedNote);
+      onUpdateNote({ ...note, tags: [...note.tags, tag] });
     }
   };
 
   const removeTagFromNote = (tagToRemove: string) => {
-    const updatedNote = {
-      ...note,
-      tags: note.tags.filter(tag => tag !== tagToRemove)
-    };
-    onUpdateNote(updatedNote);
+    onUpdateNote({ ...note, tags: note.tags.filter(tag => tag !== tagToRemove) });
   };
 
   if (note.isEncrypted) {
@@ -141,18 +131,12 @@ const AIPanel: React.FC<AIPanelProps> = ({ note, onUpdateNote }) => {
               disabled={loading.summary}
               className="text-blue-600 hover:text-blue-700 text-sm font-medium disabled:opacity-50"
             >
-              {loading.summary ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                'Generate'
-              )}
+              {loading.summary ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Generate'}
             </button>
           </div>
-          {summary ? (
-            <p className="text-sm text-gray-700 leading-relaxed">{summary}</p>
-          ) : (
-            <p className="text-sm text-gray-500 italic">Click generate to create a summary</p>
-          )}
+          <p className={`text-sm ${summary ? 'text-gray-700' : 'text-gray-500 italic'}`}>
+            {summary || 'Click generate to create a summary'}
+          </p>
         </div>
 
         <div className="bg-white rounded-lg border border-gray-200 p-4">
@@ -166,14 +150,10 @@ const AIPanel: React.FC<AIPanelProps> = ({ note, onUpdateNote }) => {
               disabled={loading.tags}
               className="text-blue-600 hover:text-blue-700 text-sm font-medium disabled:opacity-50"
             >
-              {loading.tags ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                'Suggest'
-              )}
+              {loading.tags ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Suggest'}
             </button>
           </div>
-          
+
           {note.tags.length > 0 && (
             <div className="mb-3">
               <p className="text-xs text-gray-500 mb-2">Current tags:</p>
@@ -191,7 +171,7 @@ const AIPanel: React.FC<AIPanelProps> = ({ note, onUpdateNote }) => {
               </div>
             </div>
           )}
-          
+
           {suggestedTags.length > 0 && (
             <div>
               <p className="text-xs text-gray-500 mb-2">Suggested tags:</p>
@@ -208,7 +188,7 @@ const AIPanel: React.FC<AIPanelProps> = ({ note, onUpdateNote }) => {
               </div>
             </div>
           )}
-          
+
           {!loading.tags && suggestedTags.length === 0 && (
             <p className="text-sm text-gray-500 italic">Click suggest to get tag recommendations</p>
           )}
@@ -225,14 +205,10 @@ const AIPanel: React.FC<AIPanelProps> = ({ note, onUpdateNote }) => {
               disabled={loading.grammar}
               className="text-blue-600 hover:text-blue-700 text-sm font-medium disabled:opacity-50"
             >
-              {loading.grammar ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                'Check'
-              )}
+              {loading.grammar ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Check'}
             </button>
           </div>
-          
+
           {grammarIssues.length > 0 ? (
             <div className="space-y-2">
               {grammarIssues.map((issue, index) => (
@@ -242,7 +218,7 @@ const AIPanel: React.FC<AIPanelProps> = ({ note, onUpdateNote }) => {
                 </div>
               ))}
             </div>
-          ) : grammarIssues.length === 0 && !loading.grammar ? (
+          ) : !loading.grammar ? (
             <div className="flex items-center gap-2">
               <CheckCircle className="h-4 w-4 text-green-500" />
               <p className="text-sm text-green-700">No grammar issues found!</p>
@@ -256,9 +232,9 @@ const AIPanel: React.FC<AIPanelProps> = ({ note, onUpdateNote }) => {
           <h3 className="font-medium text-gray-900 flex items-center gap-2 mb-3">
             <BookOpen className="h-4 w-4 text-purple-600" />
             Auto Glossary
-            {loading.glossary && <Loader2 className="h-4 w-4 animate-spin" />}
+            {loading.glossary && <Loader2 className="h-4 w-4 animate-spin ml-2" />}
           </h3>
-          
+
           {Object.keys(glossaryTerms).length > 0 ? (
             <div className="space-y-3">
               {Object.entries(glossaryTerms).map(([term, definition]) => (

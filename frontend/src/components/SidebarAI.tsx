@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { Note } from '../types/Note'
 import { Eye, Tag, CheckCircle, BookOpen, Share2, Copy, ExternalLink } from 'lucide-react'
 import { aiService } from '../services/aiService'
@@ -29,7 +29,7 @@ function textToHtml(text = '') {
   return text.replace(/\n/g, '<br/>')
 }
 
-export default function SidebarAI({ note, editorRef, onUpdateNote }: SidebarAIProps) {
+const SidebarAI = React.memo(function SidebarAI({ note, editorRef, onUpdateNote }: SidebarAIProps) {
   // Store AI states per note
   const aiStatesRef = useRef<Map<string, AIPanelState>>(new Map())
   
@@ -181,7 +181,7 @@ export default function SidebarAI({ note, editorRef, onUpdateNote }: SidebarAIPr
     }
   }, [note.content, note.title])
 
-  async function callApi(path:string, body:any) {
+  const callApi = useCallback(async (path: string, body: any) => {
     try {
       const res = await fetch(path, {
         method: 'POST',
@@ -199,9 +199,9 @@ export default function SidebarAI({ note, editorRef, onUpdateNote }: SidebarAIPr
       console.error('API call failed:', error)
       throw error
     }
-  }
+  }, [])
 
-  async function handleGenerateSummary() {
+  const handleGenerateSummary = useCallback(async () => {
     setError('')
     setLoadingSummary(true)
     updateState({ summary: '' })
@@ -213,7 +213,7 @@ export default function SidebarAI({ note, editorRef, onUpdateNote }: SidebarAIPr
     } finally {
       setLoadingSummary(false)
     }
-  }
+  }, [note.content, updateState])
 
   async function handleSuggestTags() {
     setError('')
@@ -519,4 +519,6 @@ export default function SidebarAI({ note, editorRef, onUpdateNote }: SidebarAIPr
       <style>{`.ai-gloss{background:rgba(253,240,248,0.7);border-bottom:1px dashed rgba(128,90,200,0.7);cursor:help;padding:0 1px}`}</style>
     </div>
   )
-}
+})
+
+export default SidebarAI

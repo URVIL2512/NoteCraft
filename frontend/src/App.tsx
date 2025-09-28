@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Plus, Settings, Menu, X } from 'lucide-react';
 import RichTextEditor from './components/RichTextEditor';
 import NotesList from './components/NotesList';
@@ -18,6 +18,7 @@ function App() {
   const [showAIPanel, setShowAIPanel] = useState(true);
   const [showLeftPanel, setShowLeftPanel] = useState(true);
   const editorRef = useRef<HTMLDivElement>(null);
+  const isInitialLoad = useRef(true);
 
   useEffect(() => {
     const savedNotes = loadNotes();
@@ -25,13 +26,19 @@ function App() {
     if (savedNotes.length > 0) {
       setSelectedNote(savedNotes[0]);
     }
+    isInitialLoad.current = false;
+  }, []);
+
+  // Memoized save function to prevent unnecessary re-renders
+  const saveNotesToStorage = useCallback((notesToSave: Note[]) => {
+    if (!isInitialLoad.current && notesToSave.length > 0) {
+      saveNotes(notesToSave);
+    }
   }, []);
 
   useEffect(() => {
-    if (notes.length > 0) {
-      saveNotes(notes);
-    }
-  }, [notes]);
+    saveNotesToStorage(notes);
+  }, [notes, saveNotesToStorage]);
 
   const createNewNote = () => {
     const newNote: Note = {
@@ -84,7 +91,11 @@ function App() {
     setNotes(updatedNotes);
   };
 
-  const filteredNotes = filterNotes(notes, searchTerm, showPinnedOnly);
+  // Memoize filtered notes to prevent unnecessary recalculations
+  const filteredNotes = useMemo(() => 
+    filterNotes(notes, searchTerm, showPinnedOnly), 
+    [notes, searchTerm, showPinnedOnly]
+  );
 
   const handleStartApp = () => {
     setShowLanding(false);
