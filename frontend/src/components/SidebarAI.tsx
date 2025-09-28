@@ -29,7 +29,7 @@ function textToHtml(text = '') {
   return text.replace(/\n/g, '<br/>')
 }
 
-const SidebarAI = React.memo(function SidebarAI({ note, editorRef, onUpdateNote }: SidebarAIProps) {
+export default function SidebarAI({ note, editorRef, onUpdateNote }: SidebarAIProps) {
   // Store AI states per note
   const aiStatesRef = useRef<Map<string, AIPanelState>>(new Map())
   
@@ -201,7 +201,7 @@ const SidebarAI = React.memo(function SidebarAI({ note, editorRef, onUpdateNote 
     }
   }, [])
 
-  const handleGenerateSummary = useCallback(async () => {
+  async function handleGenerateSummary() {
     setError('')
     setLoadingSummary(true)
     updateState({ summary: '' })
@@ -213,7 +213,7 @@ const SidebarAI = React.memo(function SidebarAI({ note, editorRef, onUpdateNote 
     } finally {
       setLoadingSummary(false)
     }
-  }, [note.content, updateState])
+  }
 
   async function handleSuggestTags() {
     setError('')
@@ -519,6 +519,4 @@ const SidebarAI = React.memo(function SidebarAI({ note, editorRef, onUpdateNote 
       <style>{`.ai-gloss{background:rgba(253,240,248,0.7);border-bottom:1px dashed rgba(128,90,200,0.7);cursor:help;padding:0 1px}`}</style>
     </div>
   )
-})
-
-export default SidebarAI
+}

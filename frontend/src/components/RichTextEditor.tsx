@@ -21,7 +21,7 @@ interface RichTextEditorProps {
   editorRef?: React.RefObject<HTMLDivElement>;
 }
 
-const RichTextEditor: React.FC<RichTextEditorProps> = React.memo(({ note, onUpdateNote, editorRef: externalEditorRef }) => {
+const RichTextEditor: React.FC<RichTextEditorProps> = ({ note, onUpdateNote, editorRef: externalEditorRef }) => {
   const internalEditorRef = useRef<HTMLDivElement>(null);
   const editorRef = externalEditorRef || internalEditorRef;
   const titleRef = useRef<HTMLInputElement>(null);
@@ -397,6 +397,6 @@ const RichTextEditor: React.FC<RichTextEditorProps> = React.memo(({ note, onUpda
       </div>
     </div>
   );
-});
+};
 
 export default RichTextEditor;
