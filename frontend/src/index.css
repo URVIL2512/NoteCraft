@@ -30,7 +30,7 @@
 html, body, * {
   direction: ltr !important;
   text-align: left !important;
-  unicode-bidi: normal !important;
+  unicode-bidi: plaintext !important;
   writing-mode: horizontal-tb !important;
 }
 
@@ -43,13 +43,14 @@ html {
 body {
   direction: ltr !important;
   text-align: left !important;
+  unicode-bidi: plaintext !important;
 }
 
 /* Extra strong targeting for contentEditable */
 [contenteditable], [contenteditable="true"], [contenteditable=""] {
   direction: ltr !important;
   text-align: left !important;
-  unicode-bidi: normal !important;
+  unicode-bidi: plaintext !important;
   writing-mode: horizontal-tb !important;
   text-direction: ltr !important;
 }
@@ -58,7 +59,7 @@ body {
 [contenteditable] * {
   direction: ltr !important;
   text-align: left !important;
-  unicode-bidi: normal !important;
+  unicode-bidi: plaintext !important;
   writing-mode: horizontal-tb !important;
 }
 
@@ -77,7 +78,7 @@ body {
 [contenteditable] h6 {
   direction: ltr !important;
   text-align: left !important;
-  unicode-bidi: normal !important;
+  unicode-bidi: plaintext !important;
   writing-mode: horizontal-tb !important;
 }
 
@@ -85,7 +86,7 @@ body {
 input, textarea, div[contenteditable] {
   direction: ltr !important;
   text-align: left !important;
-  unicode-bidi: normal !important;
+  unicode-bidi: plaintext !important;
   writing-mode: horizontal-tb !important;
   word-spacing: normal !important;
   letter-spacing: normal !important;
@@ -110,7 +111,7 @@ textarea {
 .prose, .prose * {
   direction: ltr !important;
   text-align: left !important;
-  unicode-bidi: normal !important;
+  unicode-bidi: plaintext !important;
 }
 
 /* Force LTR on all React components and UI elements */
@@ -140,14 +141,14 @@ button, input, select, textarea, div, span, p, h1, h2, h3, h4, h5, h6 {
 html[lang], body, #root {
   direction: ltr !important;
   text-align: left !important;
-  unicode-bidi: normal !important;
+  unicode-bidi: plaintext !important;
 }
 
 /* Override any inherited RTL from parent elements */
 * {
   direction: ltr !important;
   text-align: left !important;
-  unicode-bidi: normal !important;
+  unicode-bidi: plaintext !important;
   writing-mode: horizontal-tb !important;
 }
 
@@ -155,7 +156,7 @@ html[lang], body, #root {
 [dir="rtl"], .rtl, [class*="rtl"] {
   direction: ltr !important;
   text-align: left !important;
-  unicode-bidi: normal !important;
+  unicode-bidi: plaintext !important;
 }
 
 /* Force LTR on all form elements */
@@ -167,5 +168,5 @@ textarea,
 select {
   direction: ltr !important;
   text-align: left !important;
-  unicode-bidi: normal !important;
+  unicode-bidi: plaintext !important;
 }

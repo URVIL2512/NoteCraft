@@ -39,17 +39,17 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ note, onUpdateNote, edi
       // Force LTR direction aggressively
       editorRef.current.style.direction = 'ltr';
       editorRef.current.style.textAlign = 'left';
-      editorRef.current.style.unicodeBidi = 'normal';
+      editorRef.current.style.unicodeBidi = 'plaintext';
       editorRef.current.style.writingMode = 'horizontal-tb';
       editorRef.current.setAttribute('dir', 'ltr');
-      editorRef.current.setAttribute('style', 'direction: ltr !important; text-align: left !important; unicode-bidi: normal !important; writing-mode: horizontal-tb !important;');
+      editorRef.current.setAttribute('style', 'direction: ltr !important; text-align: left !important; unicode-bidi: plaintext !important; writing-mode: horizontal-tb !important;');
       
       // Force LTR on all child elements
       const allElements = editorRef.current.querySelectorAll('*');
       allElements.forEach(el => {
         (el as HTMLElement).style.direction = 'ltr';
         (el as HTMLElement).style.textAlign = 'left';
-        (el as HTMLElement).style.unicodeBidi = 'normal';
+        (el as HTMLElement).style.unicodeBidi = 'plaintext';
         (el as HTMLElement).setAttribute('dir', 'ltr');
       });
     }
@@ -67,7 +67,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ note, onUpdateNote, edi
     // Force LTR on the editor and all its children
     editorRef.current.style.direction = 'ltr';
     editorRef.current.style.textAlign = 'left';
-    editorRef.current.style.unicodeBidi = 'normal';
+    editorRef.current.style.unicodeBidi = 'plaintext';
     editorRef.current.setAttribute('dir', 'ltr');
     
     // Force LTR on all child elements
@@ -75,7 +75,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ note, onUpdateNote, edi
     allElements.forEach(el => {
       (el as HTMLElement).style.direction = 'ltr';
       (el as HTMLElement).style.textAlign = 'left';
-      (el as HTMLElement).style.unicodeBidi = 'normal';
+      (el as HTMLElement).style.unicodeBidi = 'plaintext';
       (el as HTMLElement).setAttribute('dir', 'ltr');
     });
   };
@@ -252,7 +252,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ note, onUpdateNote, edi
           style={{
             direction: 'ltr',
             textAlign: 'left',
-            unicodeBidi: 'normal'
+            unicodeBidi: 'plaintext'
           }}
         />
         <div className="flex items-center justify-between mt-4">
@@ -381,7 +381,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ note, onUpdateNote, edi
             lineHeight: '1.6',
             direction: 'ltr',
             textAlign: 'left',
-            unicodeBidi: 'normal',
+            unicodeBidi: 'plaintext',
             writingMode: 'horizontal-tb',
             fontFamily: 'inherit',
             whiteSpace: 'pre-wrap',

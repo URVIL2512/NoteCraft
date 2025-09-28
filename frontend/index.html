@@ -12,7 +12,7 @@
       * {
         direction: ltr !important;
         text-align: left !important;
-        unicode-bidi: normal !important;
+        unicode-bidi: plaintext !important;
       }
     </style>
   </head>
@@ -31,7 +31,7 @@
         allElements.forEach(el => {
           el.style.direction = 'ltr';
           el.style.textAlign = 'left';
-          el.style.unicodeBidi = 'normal';
+          el.style.unicodeBidi = 'plaintext';
           el.setAttribute('dir', 'ltr');
         });
       }
