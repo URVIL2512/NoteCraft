@@ -26,6 +26,8 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ note, onUpdateNote, edi
   const editorRef = externalEditorRef || internalEditorRef;
   const titleRef = useRef<HTMLInputElement>(null);
   const [fontSize, setFontSize] = useState(16);
+  const saveTimerRef = useRef<number | null>(null);
+  const lastContentRef = useRef<string>(note.content || '');
   const [showEncryption, setShowEncryption] = useState(false);
   const [showDecryption, setShowDecryption] = useState(false);
   const [password, setPassword] = useState('');
@@ -36,19 +38,16 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ note, onUpdateNote, edi
 
   useEffect(() => {
     if (editorRef.current && isDecrypted) {
-      // Force LTR direction aggressively
+      // Force LTR direction (do not force text-align to preserve alignment commands)
       editorRef.current.style.direction = 'ltr';
-      editorRef.current.style.textAlign = 'left';
       editorRef.current.style.unicodeBidi = 'plaintext';
       editorRef.current.style.writingMode = 'horizontal-tb';
       editorRef.current.setAttribute('dir', 'ltr');
-      editorRef.current.setAttribute('style', 'direction: ltr !important; text-align: left !important; unicode-bidi: plaintext !important; writing-mode: horizontal-tb !important;');
       
       // Force LTR on all child elements
       const allElements = editorRef.current.querySelectorAll('*');
       allElements.forEach(el => {
         (el as HTMLElement).style.direction = 'ltr';
-        (el as HTMLElement).style.textAlign = 'left';
         (el as HTMLElement).style.unicodeBidi = 'plaintext';
         (el as HTMLElement).setAttribute('dir', 'ltr');
       });
@@ -64,19 +63,20 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ note, onUpdateNote, edi
   const enforceLTR = useCallback(() => {
     if (!editorRef.current) return;
     
-    // Force LTR on the editor and all its children
-    editorRef.current.style.direction = 'ltr';
-    editorRef.current.style.textAlign = 'left';
-    editorRef.current.style.unicodeBidi = 'plaintext';
-    editorRef.current.setAttribute('dir', 'ltr');
+    // Force LTR on the editor and all its children (do not force text-align)
+    const root = editorRef.current as HTMLElement;
+    root.setAttribute('dir', 'ltr');
+    root.style.setProperty('direction', 'ltr', 'important');
+    root.style.setProperty('unicode-bidi', 'plaintext', 'important');
+    root.style.setProperty('writing-mode', 'horizontal-tb', 'important');
     
-    // Force LTR on all child elements
-    const allElements = editorRef.current.querySelectorAll('*');
-    allElements.forEach(el => {
-      (el as HTMLElement).style.direction = 'ltr';
-      (el as HTMLElement).style.textAlign = 'left';
-      (el as HTMLElement).style.unicodeBidi = 'plaintext';
-      (el as HTMLElement).setAttribute('dir', 'ltr');
+    const allElements = root.querySelectorAll('*');
+    allElements.forEach(node => {
+      const el = node as HTMLElement;
+      el.setAttribute('dir', 'ltr');
+      el.style.setProperty('direction', 'ltr', 'important');
+      el.style.setProperty('unicode-bidi', 'plaintext', 'important');
+      el.style.setProperty('writing-mode', 'horizontal-tb', 'important');
     });
   }, []);
 
@@ -89,12 +89,58 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ note, onUpdateNote, edi
     // Execute the formatting command
     document.execCommand(command, false, value);
     
-    // Enforce LTR after command execution
-    enforceLTR();
+    // Re-apply dir attribute but do not override textAlign - keep user's alignment
+    editorRef.current.setAttribute('dir', 'ltr');
+    const selection = window.getSelection();
+    if (selection && selection.rangeCount > 0) {
+      // Ensure caret stays at the end of the current line after formatting
+      const range = selection.getRangeAt(0);
+      selection.removeAllRanges();
+      selection.addRange(range);
+    }
     
     // Update the note content with the formatted HTML
     const updatedNote = { ...note, content: editorRef.current.innerHTML };
     onUpdateNote(updatedNote);
+  };
+
+  // Helpers: alignment using execCommand and caret stabilization
+  const placeCaretAtEnd = () => {
+    if (!editorRef.current) return;
+    const el = editorRef.current;
+    el.focus();
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    range.collapse(false);
+    const sel = window.getSelection();
+    if (!sel) return;
+    sel.removeAllRanges();
+    sel.addRange(range);
+  };
+
+  const alignBlock = (type: 'left' | 'center' | 'right') => {
+    if (!editorRef.current) return;
+    editorRef.current.focus();
+    const cmd = type === 'left' ? 'justifyLeft' : type === 'center' ? 'justifyCenter' : 'justifyRight';
+    document.execCommand(cmd, false);
+    // Ensure block direction stays LTR without overriding chosen alignment
+    const sel = window.getSelection();
+    if (sel && sel.focusNode) {
+      const parent = (sel.focusNode as HTMLElement).parentElement as HTMLElement | null;
+      if (parent) {
+        parent.setAttribute('dir', 'ltr');
+        parent.style.setProperty('direction', 'ltr', 'important');
+        parent.style.setProperty('unicode-bidi', 'plaintext', 'important');
+      }
+    }
+    // Keep caret intuitive
+    placeCaretAtEnd();
+    // Persist content once
+    const html = editorRef.current.innerHTML;
+    if (html !== lastContentRef.current) {
+      lastContentRef.current = html;
+      onUpdateNote({ ...note, content: html });
+    }
   };
 
 
@@ -269,14 +315,31 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ note, onUpdateNote, edi
               </button>
             </div>
             <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
-              <button onClick={() => executeCommand('justifyLeft')} className="p-2 hover:bg-gray-200 rounded transition-colors" title="Align Left">
+              <button onClick={() => alignBlock('left')} className="p-2 hover:bg-gray-200 rounded transition-colors" title="Align Left">
                 <AlignLeft className="h-4 w-4" />
               </button>
-              <button onClick={() => executeCommand('justifyCenter')} className="p-2 hover:bg-gray-200 rounded transition-colors" title="Align Center">
+              <button onClick={() => alignBlock('center')} className="p-2 hover:bg-gray-200 rounded transition-colors" title="Align Center">
                 <AlignCenter className="h-4 w-4" />
               </button>
-              <button onClick={() => executeCommand('justifyRight')} className="p-2 hover:bg-gray-200 rounded transition-colors" title="Align Right">
+              <button onClick={() => alignBlock('right')} className="p-2 hover:bg-gray-200 rounded transition-colors" title="Align Right">
                 <AlignRight className="h-4 w-4" />
+              </button>
+              {/* Explicit block direction reset to guard RTL fallback in some browsers */}
+              <button onClick={() => {
+                if (!editorRef.current) return;
+                document.execCommand('formatBlock', false, 'p');
+                editorRef.current.setAttribute('dir', 'ltr');
+                const selection = window.getSelection();
+                if (selection && selection.focusNode) {
+                  const block = (selection.focusNode as HTMLElement).parentElement as HTMLElement;
+                  if (block) {
+                    block.setAttribute('dir', 'ltr');
+                    block.style.setProperty('direction', 'ltr', 'important');
+                    block.style.setProperty('unicode-bidi', 'plaintext', 'important');
+                  }
+                }
+              }} className="p-2 hover:bg-gray-200 rounded transition-colors" title="Force LTR Block">
+                LTR
               </button>
             </div>
             <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
@@ -361,11 +424,20 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ note, onUpdateNote, edi
           contentEditable
           dangerouslySetInnerHTML={{ __html: note.content }}
           onInput={(e) => {
-            const updatedNote = { ...note, content: e.currentTarget.innerHTML };
-            onUpdateNote(updatedNote);
-            
-            // Debounce LTR enforcement to avoid performance issues
-            setTimeout(() => enforceLTR(), 100);
+            const html = e.currentTarget.innerHTML;
+            // Debounce save to avoid selection jitter
+            if (saveTimerRef.current) {
+              window.clearTimeout(saveTimerRef.current);
+            }
+            saveTimerRef.current = window.setTimeout(() => {
+              if (html !== lastContentRef.current) {
+                lastContentRef.current = html;
+                onUpdateNote({ ...note, content: html });
+              }
+            }, 150);
+
+            // Light LTR normalization without overriding alignment
+            setTimeout(() => enforceLTR(), 80);
           }}
           onKeyDown={(e) => {
             // Debounce LTR enforcement on key press
@@ -380,7 +452,6 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ note, onUpdateNote, edi
             fontSize: `${fontSize}px`,
             lineHeight: '1.6',
             direction: 'ltr',
-            textAlign: 'left',
             unicodeBidi: 'plaintext',
             writingMode: 'horizontal-tb',
             fontFamily: 'inherit',
@@ -400,3 +471,4 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ note, onUpdateNote, edi
 };
 
 export default RichTextEditor;
+

@@ -4,11 +4,12 @@
   "description": "AI-powered note-taking application",
   "scripts": {
     "build": "cd frontend && npm install && npm run build",
-    "start": "cd backend && python app.py",
-    "dev": "concurrently \"cd backend && python app.py\" \"cd frontend && npm run dev\"",
+    "start": "cd backend && node index.js",
+    "dev": "concurrently \"cd backend && node index.js\" \"cd frontend && npm run dev\"",
     "vercel-build": "cd frontend && npm install && npm run build"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "concurrently": "^8.2.2"
   },
   "engines": {

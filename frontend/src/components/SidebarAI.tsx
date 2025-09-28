@@ -345,12 +345,24 @@ export default function SidebarAI({ note, editorRef, onUpdateNote }: SidebarAIPr
       
       // Use environment-aware API URL
       const baseURL = process.env.NODE_ENV === 'production' ? '' : 'http://localhost:5000';
-      const data = await callApi(`${baseURL}/api/notes/share`, { 
-        noteId: note.id,
-        title: note.title,
-        content: note.content,
-        tags: note.tags
-      })
+      const response = await fetch(`${baseURL}/api/notes/share`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          noteId: note.id,
+          title: note.title,
+          content: note.content,
+          tags: note.tags
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      
+      const data = await response.json();
       
       console.log('Share response:', data)
       

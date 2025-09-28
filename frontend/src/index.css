@@ -26,10 +26,9 @@
   text-decoration: underline;
 }
 
-/* Nuclear option - force LTR everywhere */
+/* Force LTR globally but do not hard-override text alignment */
 html, body, * {
   direction: ltr !important;
-  text-align: left !important;
   unicode-bidi: plaintext !important;
   writing-mode: horizontal-tb !important;
 }
@@ -42,23 +41,20 @@ html {
 
 body {
   direction: ltr !important;
-  text-align: left !important;
   unicode-bidi: plaintext !important;
 }
 
 /* Extra strong targeting for contentEditable */
 [contenteditable], [contenteditable="true"], [contenteditable=""] {
   direction: ltr !important;
-  text-align: left !important;
   unicode-bidi: plaintext !important;
   writing-mode: horizontal-tb !important;
   text-direction: ltr !important;
 }
 
-/* Nuclear option for contentEditable - force LTR at all costs */
+/* ContentEditable children inherit LTR but alignment is controlled by editor */
 [contenteditable] * {
   direction: ltr !important;
-  text-align: left !important;
   unicode-bidi: plaintext !important;
   writing-mode: horizontal-tb !important;
 }
@@ -82,10 +78,9 @@ body {
   writing-mode: horizontal-tb !important;
 }
 
-/* Force all text inputs */
+/* Force all text inputs (leave alignment to the app) */
 input, textarea, div[contenteditable] {
   direction: ltr !important;
-  text-align: left !important;
   unicode-bidi: plaintext !important;
   writing-mode: horizontal-tb !important;
   word-spacing: normal !important;
@@ -110,14 +105,12 @@ textarea {
 /* Override any inherited styles */
 .prose, .prose * {
   direction: ltr !important;
-  text-align: left !important;
   unicode-bidi: plaintext !important;
 }
 
 /* Force LTR on all React components and UI elements */
 #root, #root * {
   direction: ltr !important;
-  text-align: left !important;
 }
 
 /* Specific targeting for common UI patterns */
@@ -134,20 +127,17 @@ button, input, select, textarea, div, span, p, h1, h2, h3, h4, h5, h6 {
 /* Ensure text flows left to right in all containers */
 .container, .wrapper, .content, .main, .sidebar, .panel {
   direction: ltr !important;
-  text-align: left !important;
 }
 
 /* Prevent any browser auto-detection of RTL languages */
 html[lang], body, #root {
   direction: ltr !important;
-  text-align: left !important;
   unicode-bidi: plaintext !important;
 }
 
 /* Override any inherited RTL from parent elements */
 * {
   direction: ltr !important;
-  text-align: left !important;
   unicode-bidi: plaintext !important;
   writing-mode: horizontal-tb !important;
 }
@@ -155,7 +145,6 @@ html[lang], body, #root {
 /* Specific override for any potential RTL classes or attributes */
 [dir="rtl"], .rtl, [class*="rtl"] {
   direction: ltr !important;
-  text-align: left !important;
   unicode-bidi: plaintext !important;
 }
 
@@ -167,6 +156,5 @@ input[type="search"],
 textarea, 
 select {
   direction: ltr !important;
-  text-align: left !important;
   unicode-bidi: plaintext !important;
 }
