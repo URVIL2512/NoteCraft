@@ -1,13 +1,16 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Suspense, lazy } from 'react';
 import { Plus, Settings, Menu, X } from 'lucide-react';
-import RichTextEditor from './components/RichTextEditor';
-import NotesList from './components/NotesList';
-import SearchBar from './components/SearchBar';
-import SidebarAI from './components/SidebarAI';
-import LandingPage from './components/LandingPage';
+import LoadingSpinner from './components/LoadingSpinner';
 import { Note } from './types/Note';
 import { loadNotes, saveNotes } from './utils/storage';
 import { filterNotes } from './utils/noteUtils';
+
+// Lazy load components for better performance
+const RichTextEditor = lazy(() => import('./components/RichTextEditor'));
+const NotesList = lazy(() => import('./components/NotesList'));
+const SearchBar = lazy(() => import('./components/SearchBar'));
+const SidebarAI = lazy(() => import('./components/SidebarAI'));
+const LandingPage = lazy(() => import('./components/LandingPage'));
 
 function App() {
   const [showLanding, setShowLanding] = useState(true);
@@ -91,7 +94,11 @@ function App() {
   };
 
   if (showLanding) {
-    return <LandingPage onStart={handleStartApp} />;
+    return (
+      <Suspense fallback={<LoadingSpinner />}>
+        <LandingPage onStart={handleStartApp} />
+      </Suspense>
+    );
   }
 
   return (
@@ -109,12 +116,14 @@ function App() {
             <h1 className="text-2xl font-bold text-gray-900">NoteCraft</h1>
           </div>
           <div className="flex items-center gap-4">
-            <SearchBar 
-              searchTerm={searchTerm} 
-              onSearchChange={setSearchTerm}
-              showPinnedOnly={showPinnedOnly}
-              onTogglePinnedFilter={() => setShowPinnedOnly(!showPinnedOnly)}
-            />
+            <Suspense fallback={<div className="w-64 h-10 bg-gray-200 rounded animate-pulse"></div>}>
+              <SearchBar 
+                searchTerm={searchTerm} 
+                onSearchChange={setSearchTerm}
+                showPinnedOnly={showPinnedOnly}
+                onTogglePinnedFilter={() => setShowPinnedOnly(!showPinnedOnly)}
+              />
+            </Suspense>
             <button
               onClick={createNewNote}
               className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
@@ -135,25 +144,29 @@ function App() {
       <div className="flex h-[calc(100vh-80px)]">
         {showLeftPanel && (
           <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
-            <NotesList
-              notes={filteredNotes}
-              selectedNote={selectedNote}
-              onSelectNote={setSelectedNote}
-              onDeleteNote={deleteNote}
-              onTogglePin={togglePinNote}
-              showPinnedOnly={showPinnedOnly}
-            />
+            <Suspense fallback={<div className="p-4"><div className="h-8 bg-gray-200 rounded animate-pulse mb-2"></div><div className="h-4 bg-gray-200 rounded animate-pulse"></div></div>}>
+              <NotesList
+                notes={filteredNotes}
+                selectedNote={selectedNote}
+                onSelectNote={setSelectedNote}
+                onDeleteNote={deleteNote}
+                onTogglePin={togglePinNote}
+                showPinnedOnly={showPinnedOnly}
+              />
+            </Suspense>
           </div>
         )}
 
         <div className="flex-1 flex">
           <div className={`${showAIPanel ? 'flex-1' : 'w-full'} bg-white`}>
             {selectedNote ? (
-              <RichTextEditor
-                note={selectedNote}
-                onUpdateNote={updateNote}
-                editorRef={editorRef}
-              />
+              <Suspense fallback={<div className="p-6"><div className="h-8 bg-gray-200 rounded animate-pulse mb-4"></div><div className="h-4 bg-gray-200 rounded animate-pulse"></div></div>}>
+                <RichTextEditor
+                  note={selectedNote}
+                  onUpdateNote={updateNote}
+                  editorRef={editorRef}
+                />
+              </Suspense>
             ) : (
               <div className="h-full flex items-center justify-center text-gray-500">
                 <div className="text-center">
@@ -167,7 +180,9 @@ function App() {
 
           {showAIPanel && selectedNote && (
             <div className="w-80 bg-white border-l border-gray-200">
-              <SidebarAI note={selectedNote} editorRef={editorRef} onUpdateNote={updateNote} />
+              <Suspense fallback={<div className="p-4"><div className="h-6 bg-gray-200 rounded animate-pulse mb-2"></div><div className="h-4 bg-gray-200 rounded animate-pulse mb-1"></div><div className="h-4 bg-gray-200 rounded animate-pulse"></div></div>}>
+                <SidebarAI note={selectedNote} editorRef={editorRef} onUpdateNote={updateNote} />
+              </Suspense>
             </div>
           )}
         </div>
