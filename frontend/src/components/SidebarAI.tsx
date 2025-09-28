@@ -108,38 +108,41 @@ export default function SidebarAI({ note, editorRef, onUpdateNote }: SidebarAIPr
 
   // Helper function to update state and save it to note
   const updateState = (updates: Partial<AIPanelState>) => {
+    let updatedNote = { ...note }
+    let hasChanges = false
+
     if (updates.summary !== undefined) {
       setSummary(updates.summary)
-      // Save summary to note
-      const updatedNote = { ...note, aiSummary: updates.summary }
-      onUpdateNote(updatedNote)
+      updatedNote.aiSummary = updates.summary
+      hasChanges = true
     }
     if (updates.tags !== undefined) {
       setTags(updates.tags)
-      // Save AI tags to note
-      const updatedNote = { ...note, aiTags: updates.tags }
-      onUpdateNote(updatedNote)
+      updatedNote.aiTags = updates.tags
+      hasChanges = true
     }
     if (updates.grammarResult !== undefined) {
       setGrammarResult(updates.grammarResult)
-      // Mark that grammar check was done
-      const updatedNote = { ...note, hasGrammarCheck: !!updates.grammarResult.corrected }
-      onUpdateNote(updatedNote)
+      updatedNote.hasGrammarCheck = !!updates.grammarResult.corrected
+      hasChanges = true
     }
     if (updates.glossary !== undefined) {
       setGlossary(updates.glossary)
-      // Save glossary to note
-      const updatedNote = { ...note, aiGlossary: updates.glossary }
-      onUpdateNote(updatedNote)
+      updatedNote.aiGlossary = updates.glossary
+      hasChanges = true
     }
     if (updates.shareUrl !== undefined) {
       setShareUrl(updates.shareUrl)
-      // Mark that share link was created
-      const updatedNote = { ...note, hasShareLink: !!updates.shareUrl }
-      onUpdateNote(updatedNote)
+      updatedNote.hasShareLink = !!updates.shareUrl
+      hasChanges = true
     }
     if (updates.shareCopied !== undefined) setShareCopied(updates.shareCopied)
     if (updates.highlightOn !== undefined) setHighlightOn(updates.highlightOn)
+    
+    // Only update note once if there are changes
+    if (hasChanges) {
+      onUpdateNote(updatedNote)
+    }
     
     // Save the updated state
     setTimeout(() => saveCurrentState(), 0)

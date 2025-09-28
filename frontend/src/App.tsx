@@ -29,16 +29,12 @@ function App() {
     isInitialLoad.current = false;
   }, []);
 
-  // Memoized save function to prevent unnecessary re-renders
-  const saveNotesToStorage = useCallback((notesToSave: Note[]) => {
-    if (!isInitialLoad.current && notesToSave.length > 0) {
-      saveNotes(notesToSave);
-    }
-  }, []);
-
+  // Save notes to storage when they change
   useEffect(() => {
-    saveNotesToStorage(notes);
-  }, [notes, saveNotesToStorage]);
+    if (!isInitialLoad.current && notes.length > 0) {
+      saveNotes(notes);
+    }
+  }, [notes]);
 
   const createNewNote = () => {
     const newNote: Note = {

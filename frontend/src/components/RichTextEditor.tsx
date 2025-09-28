@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { 
   Bold, 
   Italic, 
@@ -61,7 +61,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ note, onUpdateNote, edi
     setDecryptionError('');
   }, [note.id, note.content, note.title, note.isEncrypted]);
 
-  const enforceLTR = () => {
+  const enforceLTR = useCallback(() => {
     if (!editorRef.current) return;
     
     // Force LTR on the editor and all its children
@@ -78,7 +78,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ note, onUpdateNote, edi
       (el as HTMLElement).style.unicodeBidi = 'plaintext';
       (el as HTMLElement).setAttribute('dir', 'ltr');
     });
-  };
+  }, []);
 
   const executeCommand = (command: string, value?: string) => {
     if (!editorRef.current) return;
@@ -361,19 +361,19 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ note, onUpdateNote, edi
           contentEditable
           dangerouslySetInnerHTML={{ __html: note.content }}
           onInput={(e) => {
-            // Enforce LTR on every input
-            enforceLTR();
-            
             const updatedNote = { ...note, content: e.currentTarget.innerHTML };
             onUpdateNote(updatedNote);
+            
+            // Debounce LTR enforcement to avoid performance issues
+            setTimeout(() => enforceLTR(), 100);
           }}
           onKeyDown={(e) => {
-            // Enforce LTR on every key press
-            setTimeout(() => enforceLTR(), 0);
+            // Debounce LTR enforcement on key press
+            setTimeout(() => enforceLTR(), 50);
           }}
           onPaste={(e) => {
             // Enforce LTR after paste
-            setTimeout(() => enforceLTR(), 0);
+            setTimeout(() => enforceLTR(), 50);
           }}
           className="flex-1 w-full h-full p-6 outline-none resize-none border-none overflow-y-auto"
           style={{

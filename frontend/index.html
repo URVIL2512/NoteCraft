@@ -39,11 +39,10 @@
       // Run on page load
       document.addEventListener('DOMContentLoaded', enforceLTR);
       
-      // Run continuously to catch any dynamic changes
-      setInterval(enforceLTR, 1000);
-      
-      // Run on any DOM changes
-      const observer = new MutationObserver(enforceLTR);
+      // Run on any DOM changes (less aggressive)
+      const observer = new MutationObserver(() => {
+        setTimeout(enforceLTR, 100);
+      });
       observer.observe(document.body, { 
         childList: true, 
         subtree: true, 
